@@ -479,7 +479,7 @@ render();if(storageWarning)toast(storageWarning);
 // Decode shared illustrations once; report missing assets instead of silently showing an old icon.
 (()=>{
 const notice=document.createElement('div');notice.className='asset-notice';notice.setAttribute('role','status');notice.textContent='正在載入神域美術…';document.body.appendChild(notice);
-const paths=[...new Set([...Object.entries(OLYMPUS_ART.atlases).filter(([key])=>!key.startsWith("chapter-")).map(([,url])=>url),...Object.values(OLYMPUS_ART.scenes)])];let loaded=0;
+const paths=[OLYMPUS_ART.scenes.sky];let loaded=0;
 Promise.all(paths.map(src=>new Promise(resolve=>{const image=new Image();image.onload=()=>{loaded++;notice.textContent=`正在載入神域美術 ${loaded} / ${paths.length}`;resolve(true);};image.onerror=()=>resolve(false);image.src=src;}))).then(results=>{const missing=results.filter(v=>!v).length;if(!missing){notice.remove();document.body.classList.add('artwork-ready');}else{notice.classList.add('asset-error');notice.textContent=`有 ${missing} 個美術檔案未載入。請使用完整的「直接試玩」檔案，或保留 assets 資料夾，再重新整理。`;const close=document.createElement('button');close.textContent='關閉';close.onclick=()=>notice.remove();notice.appendChild(close);}});
 })();
 
@@ -518,7 +518,7 @@ async function showSkillFilm(actor,cast,epoch){const host=document.getElementByI
 
 // Each subtitle addresses its own atlas cell. Decode before changing either image or subtitle.
 const chapterImageCache=new Map();
-function loadChapterImage(key){if(!chapterImageCache.has(key)){chapterImageCache.set(key,new Promise(resolve=>{const img=new Image();img.onload=()=>{if(img.decode)img.decode().catch(()=>{}).then(()=>resolve(true));else resolve(true);};img.onerror=()=>{chapterImageCache.delete(key);resolve(false);};img.src=OLYMPUS_ART.atlases[key];}));}return chapterImageCache.get(key);}
+function loadChapterImage(key){if(!chapterImageCache.has(key)){const pending=new Promise(resolve=>{const img=new Image();let finished=false;const finish=ok=>{if(finished)return;finished=true;clearTimeout(timer);img.onload=img.onerror=null;if(!ok)chapterImageCache.delete(key);resolve(ok);};const timer=setTimeout(()=>finish(false),8000);img.fetchPriority='high';img.onload=()=>finish(true);img.onerror=()=>finish(false);img.src=OLYMPUS_ART.atlases[key];});chapterImageCache.set(key,pending);}return chapterImageCache.get(key);}
 async function renderStoryShot(n,index,text,serial){const key='chapter-'+String(n.id+1).padStart(2,'0'),rows=Math.ceil(storyLines(n).length/2);const host=document.querySelector('.film-tableau');if(!host)return false;const loaded=await loadChapterImage(key);if(!sceneState||sceneSerial!==serial||!host.isConnected)return false;if(!loaded){host.setAttribute('aria-label','分鏡圖片載入失敗');toast('分鏡圖片無法載入，保留文字故事。');return true;}
 if(!host.querySelector('.sequence-layer')){host.innerHTML='<div class="sequence-layer"></div><div class="sequence-layer"></div>';host.dataset.active='0';host.dataset.frame='-1';}
 if(+host.dataset.frame===index)return true;
@@ -619,7 +619,11 @@ function opening(){playFilm('序章 · 神明沉默的年代',[
  [0,4,'當徵糧隊再次伸出手，你沒有讓開。守住種子後，你將救出採石場的工人、打通海路，帶著凡人的證詞走向神庭。'],
  [0,5,'這是你的起義：集結神話小獸、萬族戰士與願意同行的神祇，以羈絆和策略突破三十道防線。從營地布陣開始，讓凡人的聲音抵達奧林帕斯。']
  ],()=>{progress().opening=true;persist();enter();},10000);}
-async function paintFilm(){stopFilmVoice();if(!film)return;const f=film,token=++filmToken,[chapter,cell,text]=f.frames[f.index],key='chapter-'+String(chapter+1).padStart(2,'0');await loadChapterImage(key);if(!film||film!==f||token!==filmToken)return;const rows=chapterRows[chapter],img=panel.querySelector('.journey-film-art');img.style.backgroundImage=`var(--art-${key})`;img.style.backgroundSize=`200% ${rows*100}%`;img.style.backgroundPosition=`${cell%2*100}% ${Math.floor(cell/2)*100/(rows-1)}%`;img.style.aspectRatio=globalThis.OLYMPUS_SHOT_RATIOS?.[key]||1;img.setAttribute('aria-label',text);panel.querySelector('.journey-caption').textContent=text;panel.querySelector('.journey-counter').textContent=`${f.index+1} / ${f.frames.length}${f.frameMs?' · 序章旁白':''}`;if(!voiceFilm(f,text))scheduleFilm();}
+async function paintFilm(){stopFilmVoice();if(!film)return;const f=film,index=f.index,token=++filmToken,[chapter,cell,text]=f.frames[index],key='chapter-'+String(chapter+1).padStart(2,'0');
+const img=panel.querySelector('.journey-film-art');img.style.backgroundImage='var(--realm-sky)';img.style.backgroundSize='cover';img.style.backgroundPosition='center';img.style.aspectRatio=globalThis.OLYMPUS_SHOT_RATIOS?.[key]||1;img.setAttribute('aria-label',text);
+panel.querySelector('.journey-caption').textContent=text;panel.querySelector('.journey-counter').textContent=(index+1)+' / '+f.frames.length+(f.frameMs?' · 序章旁白':'');if(!voiceFilm(f,text))scheduleFilm();
+const loaded=await loadChapterImage(key);if(!film||film!==f||f.index!==index||token!==filmToken)return;if(!loaded){img.setAttribute('aria-label',text+'（分鏡圖片暫未載入）');return;}const rows=chapterRows[chapter];img.style.backgroundImage='var(--art-'+key+')';img.style.backgroundSize='200% '+rows*100+'%';img.style.backgroundPosition=cell%2*100+'% '+Math.floor(cell/2)*100/(rows-1)+'%';}
+
 function scheduleFilm(){clearTimeout(filmClock);if(film&&!film.paused)filmClock=setTimeout(advanceFilm,film.frameMs||(Math.max(6500,film.frames[film.index][2].length*200)*prefs.pace));}
 function advanceFilm(){stopFilmVoice();clearTimeout(filmClock);if(!film)return;if(++film.index>=film.frames.length){endFilm();return;}void paintFilm();}
 function endFilm(){stopFilmVoice();clearTimeout(filmClock);filmToken++;const done=film?.done;film=null;panel.close();if(done)done();}
@@ -1106,3 +1110,4 @@ globalThis.olympusScore=BattleScore;
 globalThis.olympusResultSound=kind=>{if(active)active.pause();const src=globalThis.OLYMPUS_RESULT_AUDIO?.[kind];if(!src)return;resultKind=kind;const audio=active=new Audio(src);audio.onended=()=>{audio.removeAttribute('src');audio.load();if(active===audio)active=null;};sync();active.play().catch(()=>{});};
 document.addEventListener('input',e=>{if(e.target.matches('[data-combat-volume]'))sync();});document.addEventListener('change',e=>{if(e.target.matches('[data-combat-mute]'))sync();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)active.pause();});})();
+
