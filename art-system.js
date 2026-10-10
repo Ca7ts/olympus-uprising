@@ -1,6 +1,6 @@
 'use strict';
 globalThis.OLYMPUS_ART={
-atlases:Object.fromEntries(["result-mascots","rebellion-hearth","roles-white-1","roles-white-2","roles-white-3","roles-green-1","roles-green-2","roles-green-3","roles-green-4","roles-green-5","roles-purple-1","roles-purple-2","roles-purple-3","roles-purple-4","roles-blue-1","roles-blue-2","roles-blue-3",'animals','militia',...Array.from({length:30},(_,i)=>'chapter-'+String(i+1).padStart(2,'0')),'skill-fx','vfx-flight','vfx-impact','skill-sequence',...Array.from({length:7},(_,i)=>'chiefs-'+(i+1)),...Array.from({length:3},(_,i)=>'gods-'+(i+1))].map(n=>[n,'assets/'+n+'.webp'])),
+atlases:Object.fromEntries(["human-rebels","hero-evolution","result-mascots","rebellion-hearth","roles-white-1","roles-white-2","roles-white-3","roles-green-1","roles-green-2","roles-green-3","roles-green-4","roles-green-5","roles-purple-1","roles-purple-2","roles-purple-3","roles-purple-4","roles-blue-1","roles-blue-2","roles-blue-3",'animals','militia',...Array.from({length:30},(_,i)=>'chapter-'+String(i+1).padStart(2,'0')),'skill-fx','vfx-flight','vfx-impact','skill-sequence',...Array.from({length:7},(_,i)=>'chiefs-'+(i+1)),...Array.from({length:3},(_,i)=>'gods-'+(i+1))].map(n=>[n,'assets/'+n+'.webp'])),
 scenes:{earth:'assets/earth.webp',sea:'assets/sea.webp',sky:'assets/olympus.webp',sun:'assets/sun.webp',snow:'assets/snow.webp',night:'assets/underworld.webp'},
 sceneKeys:['earth','sea','sky','sun','snow','night'],
 sceneNames:['青銅山谷・古神聖域','潮汐神庭・愛琴王座','奧林帕斯・雲海天庭','日輪聖所・黃金階梯','霜峰神殿・北風隘口','冥河王庭・永夜之門'],
@@ -23,4 +23,3 @@ else{c.species='神祇／泰坦／原初神';c.art={sheet:'gods-'+(Math.floor(i/
 };
 
 globalThis.OLYMPUS_SHOT_RATIOS={"chapter-01":1,"chapter-02":1.3333333333333333,"chapter-03":1,"chapter-04":1,"chapter-05":1.3333333333333333,"chapter-06":1,"chapter-07":1,"chapter-08":1,"chapter-09":1,"chapter-10":1,"chapter-11":1,"chapter-12":1.3333333333333333,"chapter-13":1,"chapter-14":1,"chapter-15":1.3333333333333333,"chapter-16":1,"chapter-17":1,"chapter-18":1,"chapter-19":1,"chapter-20":1,"chapter-21":1,"chapter-22":1,"chapter-23":1,"chapter-24":1,"chapter-25":1,"chapter-26":1,"chapter-27":1,"chapter-28":1,"chapter-29":1,"chapter-30":1};
-
