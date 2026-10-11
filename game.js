@@ -504,7 +504,7 @@ if(a==='nav'){cancelPresentation();stopNodeStory();view=id;if(id==='catalog')fil
 if(a==='artZoom'){showArt(id);return;}
 
 if(a==='mode'){stopNodeStory();state.mode=id;state.node=id==='campaign'?Math.min(state.cleared,29):state.node;selected=lineup()[0]||initial[0];slotIndex=0;page=0;persist();render();return;}
-if(a==='card'||a==='inspect'){stopCatalogVoice();selected=id;mobilePeekCard=mobilePortraitLayout()?id:null;if(view==='enhancement'){render();openEnhancement(id);return;}render();if(window.innerWidth<=800&&!mobilePortraitLayout())document.querySelector('.selected-detail')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
+if(a==='card'||a==='inspect'){stopCatalogVoice();selected=id;mobilePeekCard=mobilePortraitLayout()?id:null;if(view==='enhancement'){render();openEnhancement(id);return;}render();if(matchMedia('(max-width: 900px), (hover: none) and (pointer: coarse)').matches)openMobileCardInfo(id);return;}
 if(a==='slot'){slotIndex=+id;if(lineup()[slotIndex])selected=lineup()[slotIndex];render();return;}
 if(a==='openPlacement'){openPlacement(id);return;}
 if(a==='deployTo'){selected=id;view='formation';const d=document.getElementById('detail');d.close();d.classList.remove('placement-dialog');assign(+btn.dataset.slot);toast('已部署 '+CARD[id].name);return;}
@@ -1396,3 +1396,14 @@ function scrollBannerMotion(el,out=false){if(!el)return Promise.resolve();el.cla
 
 // Rebuild control placement on orientation changes without restarting combat.
 matchMedia('(max-width: 900px) and (orientation: portrait)').addEventListener('change',()=>{if(battle)render();});
+
+// Touch collection cards open their details above the current search results.
+function openMobileCardInfo(id){
+ const c=CARD[id];if(!c)return;
+ const d=document.getElementById('detail');
+ d.className='mobile-card-info';
+ d.setAttribute('aria-labelledby','mobile-card-info-title');
+ d.innerHTML='<header class="mobile-card-info-head"><h2 id="mobile-card-info-title">角色情報</h2><button type="button" data-action="close" autofocus aria-label="關閉角色情報">關閉 ✕</button></header><div class="mobile-card-info-body">'+detail(c)+'</div>';
+ if(!d.open)d.showModal();
+}
+document.getElementById('detail').addEventListener('close',function(){this.classList.remove('mobile-card-info');});
