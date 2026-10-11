@@ -689,3 +689,32 @@ html body .scroll-banner-out{animation:scroll-banner-out .35s ease-in both!impor
 @keyframes scroll-banner-out{from{opacity:1;translate:0 0;scale:1 1}to{opacity:0;translate:0 0;scale:1.12 1}}
 @media(prefers-reduced-motion:reduce){html body :is(.stage-copy,.center-band,.mission-body h2,.current-node h2,.hint,.film-subtitles,.journey-film-copy,.replay-caption,.direct-command>span,.scroll-banner-in,.scroll-banner-out){animation:none!important}}
 html body.quiet-motion :is(.stage-copy,.center-band,.mission-body h2,.current-node h2,.hint,.film-subtitles,.journey-film-copy,.replay-caption,.direct-command>span,.scroll-banner-in,.scroll-banner-out){animation:none!important}
+/* IRON_CONTAINER_FRAMES: nine-slice rails only, NEVER fill or replace scene backgrounds. */
+html body :is(.panel,.below-roster,.nav,.phase-head,.world-masthead,.arena-banner,.current-node,.toolbar,.identity-section,.detail-emblem,.status-detail,.skill-box,.bond-panel,.battle-bonds,.terrain-hud,.terrain,.scene-effect-panel,.campaign-intel,.command-panel .battle-controls,.achievement,.settings-list,.journey-objective,.camp-growth,.revisit-panel,.camp-stock,.camp-explanation,.growth-result,.ascension-panel,.innate-divinity,.hero-progress,.hero-skill-evolution,.catalog-preview-panel,.story-exclusive-showcase,.probability-explainer,.story-person,.story-prose,.prologue-text,.hero-chronicle-art,.pool-rates>article,.camp-facilities article,.divine-research article,.star-traits article,.guardian-pool-list article,.stat-grid>div,dialog:not(.cinema-dialog):not(.journey-cinema)):not(.title-screen *):not(.limited-pool .phase-head){
+ border-color:transparent!important;
+ border-style:solid!important;
+ border-image-source:var(--art-ui_frame,url("assets/ui_frame.png"))!important;
+ border-image-slice:18%!important;
+ border-image-width:14px!important;
+ border-image-outset:0!important;
+ border-image-repeat:stretch!important;
+ border-radius:2px;
+}
+/* Portraits keep their rarity rim and original painted surface. */
+html body .avatar.painted-avatar{
+ border-color:transparent!important;
+ border-image:var(--art-ui_frame,url("assets/ui_frame.png")) 18% / 6px / 0 stretch!important;
+ outline:2px solid var(--rarity-rim,var(--tone,#c6ccd5));
+ outline-offset:0;
+}
+html body :is(.panel,.below-roster,.world-masthead,.arena-banner,.current-node,.camp-growth,.revisit-panel,.achievement):not(.title-screen *){
+ animation:iron-frame-breathe 4s ease-in-out infinite;
+}
+@keyframes iron-frame-breathe{
+ 0%,100%{box-shadow:inset 0 0 4px #73558a0a,0 4px 12px #0006,0 0 5px #7052850e}
+ 50%{box-shadow:inset 0 0 7px #b58c4412,0 4px 12px #0006,0 0 10px #b58c4422}
+}
+body.quiet-motion :is(.panel,.below-roster,.world-masthead,.arena-banner,.current-node,.camp-growth,.revisit-panel,.achievement){animation:none!important}
+@media(prefers-reduced-motion:reduce){
+ html body :is(.panel,.below-roster,.world-masthead,.arena-banner,.current-node,.camp-growth,.revisit-panel,.achievement){animation:none!important}
+}
