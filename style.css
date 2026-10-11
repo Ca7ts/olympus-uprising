@@ -1076,3 +1076,22 @@ html body .camp-story-slides:not(:has(.camp-current)) i:first-child{opacity:1!im
  .battle-controls>.command-autoplay{min-width:80px}.battle-controls>.row{flex-basis:100%}
 }
 @media(min-width:901px),(orientation:landscape){.battle-shell .battle-sidebar{grid-template-rows:auto minmax(120px,1fr)}}
+
+/* Three related battle-worn materials; retain the existing fine gold frames. */
+html body main.shell:has(>.setup-layout)>.phase-head{background-image:linear-gradient(90deg,#13121970,#11121b24),var(--art-war_basalt);background-size:100% 100%;background-position:center;background-repeat:no-repeat}
+html body main.shell:has(>.setup-layout)>.journey-objective{background-image:linear-gradient(90deg,#11141c60,#11141c25),var(--art-war_slate);background-size:100% 100%;background-position:center;background-repeat:no-repeat}
+html body .formation-workspace .board-panel>.board-head{background-image:linear-gradient(90deg,#14121650,#14121620),var(--art-war_iron);background-size:100% 100%;background-position:center;background-repeat:no-repeat}
+html body main.shell:has(>.setup-layout)>:is(.phase-head,.journey-objective),html body .formation-workspace .board-panel>.board-head{text-shadow:0 2px 3px #000;color:#f0e4ce}
+html body main.shell:has(>.setup-layout)>.phase-head .meta,html body .formation-workspace .board-panel>.board-head .meta{color:#d7dbe3}
+.mobile-nav-groups{display:none}
+.mobile-nav-menu{width:min(340px,calc(100vw - 24px));margin:0 auto;left:0;right:0;bottom:auto;padding:16px;background:#191a23;color:#ebd4a5;border:1px solid #a48854;border-image:var(--art-ui_frame) 18% / 12px / 0 stretch;box-shadow:0 12px 36px #000b;overflow-y:auto}
+.mobile-nav-menu:popover-open{display:grid;gap:10px}
+.mobile-nav-menu h3{margin:0 0 4px;text-align:center;font-size:18px}
+.mobile-nav-menu button{width:100%;min-height:46px;text-align:center}
+@media(max-width:900px){
+ html body .shell>.nav>.desktop-nav-item{display:none!important}
+ html body .shell>.nav{display:block;padding:6px;overflow:visible}
+ .mobile-nav-groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:100%}
+ .mobile-nav-trigger{min-width:0;min-height:46px;padding:7px 3px;font-size:14px;white-space:nowrap}
+ html body .battle-shell>.nav{display:none!important}
+}

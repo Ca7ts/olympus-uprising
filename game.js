@@ -1489,3 +1489,19 @@ function openBattleSection(uid,key){const u=battle?.units.find(x=>x.uid===uid),s
  }
  const box=document.createElement('div');box.append(f);return box.innerHTML;
 };})();
+
+/* Four mobile navigation categories reuse the original actions and restrictions. */
+(function(){
+ const base=mainNavigation;
+ mainNavigation=function(){const t=document.createElement('template');t.innerHTML=base();const nav=t.content.querySelector('nav');if(!nav)return base();const originals=[...nav.children];
+ const groups=[['journey','征途',['formation','divineCamp','campaign']],['heroes','英傑',['catalog','recruitment','enhancement']],['archive','典藏',['rules','achievements','battleReplay']],['supplies','行囊',['export','import','quickSettings','home']]];
+ const mobile=document.createElement('div');mobile.className='mobile-nav-groups';
+ for(const [key,label,actions]of groups){const buttons=originals.filter(b=>actions.includes(b.dataset.id||b.dataset.action||b.dataset.journey));const active=buttons.some(b=>b.classList.contains('active'));const trigger=document.createElement('button');trigger.type='button';trigger.className='mobile-nav-trigger'+(active?' active':'');trigger.setAttribute('popovertarget','mobile-nav-'+key);trigger.setAttribute('aria-expanded','false');trigger.textContent=label+' ⌄';mobile.append(trigger);
+ const menu=document.createElement('div');menu.id='mobile-nav-'+key;menu.className='mobile-nav-menu';menu.setAttribute('popover','auto');menu.setAttribute('aria-label',label+'功能');const heading=document.createElement('h3');heading.textContent=label;menu.append(heading);for(const b of buttons)menu.append(b.cloneNode(true));mobile.append(menu);}
+ originals.forEach(b=>b.classList.add('desktop-nav-item'));nav.prepend(mobile);const out=document.createElement('div');out.append(t.content);return out.innerHTML;
+ };
+ document.addEventListener('beforetoggle',e=>{if(!e.target.matches?.('.mobile-nav-menu'))return;const trigger=document.querySelector('[popovertarget="'+e.target.id+'"]');trigger?.setAttribute('aria-expanded',String(e.newState==='open'));if(e.newState==='open'&&trigger){const r=trigger.getBoundingClientRect();e.target.style.top=Math.min(r.bottom+8,innerHeight-100)+'px';e.target.style.maxHeight=Math.max(80,innerHeight-r.bottom-24)+'px';}},true);
+ document.addEventListener('click',e=>{const b=e.target.closest('.mobile-nav-menu button');if(b&&!b.disabled)b.closest('.mobile-nav-menu').hidePopover();},true);
+ window.addEventListener('resize',()=>document.querySelectorAll('.mobile-nav-menu:popover-open').forEach(m=>m.hidePopover()));
+ render();
+})();
