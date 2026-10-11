@@ -611,3 +611,16 @@ body.quiet-motion button.ui-spring,body.quiet-motion .card.ui-spring{animation:n
 @keyframes gold-particle{0%{opacity:.85;transform:rotate(calc(var(--i)*15deg)) translateY(-10vh)}100%{opacity:0;transform:rotate(calc(var(--i)*15deg)) translateY(-85vh)}}
 .gold-ultimate.reduced *{animation:none!important;transition:none!important}
 @media(max-width:700px){.gold-ultimate-portrait{left:5%;top:16%;width:35vw}.gold-ultimate-copy{left:30%;right:3%;top:35%;padding:15px}.gold-ultimate-copy h2{font-size:25px}}
+/* Catalogue auditions stay separate from combat state and remain dismissible. */
+.catalog-preview-panel{margin:14px 0;padding:14px;border:1px solid #a58950;border-radius:9px;background:linear-gradient(135deg,#28232c,#12151d);box-shadow:inset 0 1px #f4d99424}
+.catalog-preview-panel h3{margin:0 0 10px;color:#ecd49a;text-shadow:0 1px #fff3,0 2px 2px #000}
+.catalog-preview-actions{display:flex;flex-wrap:wrap;gap:8px}
+.catalog-preview-panel p{margin:10px 0 0;line-height:1.7}
+dialog.catalog-skill-preview{position:fixed;inset:0;margin:0;padding:0;width:100vw;height:100dvh;max-width:none;max-height:none;border:0;border-radius:0;background:#080b12;color:#ecd49a;overflow:hidden}
+.catalog-skill-preview::backdrop{background:#05070bea}
+.catalog-skill-preview header{position:absolute;inset:0 0 auto;z-index:100002;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px 24px;background:linear-gradient(#080b12f5,#080b12b0,transparent);pointer-events:none}
+.catalog-skill-preview header button{pointer-events:auto;flex-shrink:0}
+.catalog-skill-preview h2{font-size:clamp(18px,3vw,28px);margin:5px 0}
+.catalog-skill-preview header p{font-size:12px;color:#c4bcab;margin:4px 0}
+.catalog-skill-preview footer{position:absolute;inset:auto 0 0;z-index:100002;text-align:center;line-height:1.7;padding:18px 24px;background:linear-gradient(transparent,#080b12ed);color:#e3d7bc;pointer-events:none}
+.catalog-skill-preview #stageOverlay{z-index:1!important;pointer-events:none}
