@@ -822,3 +822,40 @@ html body .direct-command{flex-shrink:0}
  html body .round-controls .center-band:not(#round-readability){gap:6px;padding:20px 6%!important}
  html body .round-controls .center-band>strong{font-size:16px}
 }
+
+/* Fixed informational labels must not replay entrance motion on card selection. */
+html body :is(.mission-body h2,.current-node h2,.hint,.center-band,.battle-line,.rank-label):not(#static-label){animation:none!important;translate:none!important}
+html body .brandmark.erion-rune{background:transparent var(--art-erion_rune) center/contain no-repeat;border:0;box-shadow:none;border-radius:0;width:56px;height:60px;flex-shrink:0}
+/* Scenery frames only: no card or portrait selectors. */
+html body :is(.mission-art,.current-node-art,.hearth-banner,.hero-chronicle-art,.portrait-zoom,.journey-film-art,.film-tableau):not(#scenery-frame){
+ border:1px solid transparent!important;border-image:var(--art-ui_frame) 18% / 14px / 0 stretch!important;
+}
+html body :is(.mission-art,.current-node-art,.hearth-banner){position:relative;isolation:isolate}
+html body :is(.mission-art,.current-node-art,.hearth-banner)::after{
+ content:"";position:absolute;inset:0;z-index:5;pointer-events:none;border:1px solid transparent;
+ border-image:var(--art-ui_frame) 18% / 14px / 0 stretch;
+}
+.hearth-banner{overflow:hidden}
+html body .hearth-banner>.camp-story-slides{position:absolute;inset:0;max-width:none;pointer-events:none}
+.camp-story-slides i{position:absolute;inset:0;background:var(--camp-image) center/cover no-repeat;opacity:0;animation:camp-story-slide 25s linear var(--slide-delay) infinite}
+.camp-story-slides i:first-child{opacity:1}
+@keyframes camp-story-slide{0%,17%{opacity:1}20%,97%{opacity:0}100%{opacity:1}}
+html body .hearth-banner>.camp-banner-copy{position:relative;z-index:2;max-width:620px;padding:22px;background:linear-gradient(90deg,#101018e8,#101018a8,transparent);border-radius:4px}
+.camp-treasury{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.camp-treasury>span{display:flex;align-items:center;gap:16px;padding:12px 20px;background:linear-gradient(140deg,#302a30ed,#0b101aee);border:1px solid #b39361;border-image:var(--art-frame_forge) 18% / 10px / 0 stretch;box-shadow:inset 0 0 18px #0009,0 4px 12px #0006}
+.camp-treasury small{font-size:13px;letter-spacing:.12em;color:#d5c9b7}
+.camp-treasury b{font-size:24px;font-variant-numeric:tabular-nums;color:#ead3ff;text-shadow:0 0 9px #a477be44}
+.camp-treasury .treasury-ember b{color:#ffd495;text-shadow:0 0 9px #df813744}
+html body .divine-research article{background-image:linear-gradient(135deg,#1a1824bb,#10121bd9),var(--art-gravel_texture)!important;background-size:auto,420px!important}
+html body .campaign-intel .commander-line{background:var(--art-commander_plaque) center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;padding:24px 10%!important;min-height:125px;display:grid;align-content:center;gap:5px}
+html body .campaign-intel .commander-line strong{color:#f8db9f;font-size:21px;text-shadow:0 2px 3px #000}
+html body .campaign-intel .commander-line small{color:#d7d9e0}
+html body .campaign-intel .hint:not(#campaign-tip){background:none!important;border:0!important;box-shadow:none!important;text-align:center!important;font-size:19px!important;line-height:1.8;padding:20px 12px!important;color:#ecd29b!important;text-shadow:0 1px #fff0c34a,0 2px #71552f,0 3px 5px #000!important}
+.campaign-intel .hint::before{color:#dbc29b!important}
+html body .pool-rates>article::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(135deg,transparent 42%,#fff2 47%,#fff9 50%,#fff2 53%,transparent 58%);background-size:350% 350%;animation:pool-white-sweep 5s ease-in-out infinite}
+@keyframes pool-white-sweep{0%,64%{background-position:100% 100%;opacity:0}67%{opacity:.65}90%{opacity:.65}96%,100%{background-position:0 0;opacity:0}}
+html body .limited-pool.panel{background-image:radial-gradient(ellipse at 90% 0,#64457245,transparent 65%),linear-gradient(#10131bea,#15101bea),var(--art-gravel_texture)!important;background-size:auto,auto,480px!important}
+html body .story-exclusive-showcase{background:linear-gradient(110deg,#4937218c,#121522ed),var(--art-gravel_texture)!important;background-size:auto,400px!important}
+@media(prefers-reduced-motion:reduce){.camp-story-slides i,html body .pool-rates>article::after{animation:none!important}.camp-story-slides i:not(:first-child){opacity:0!important}}
+body.quiet-motion .camp-story-slides i,body.quiet-motion .pool-rates>article::after{animation:none!important}
+body.quiet-motion .camp-story-slides i:not(:first-child){opacity:0!important}
