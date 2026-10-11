@@ -1077,7 +1077,7 @@ const CombatAudio=(()=>{
  function explosion(){texture('地',true,true);voice(66,28,.7,.3);voice(1400,100,.6,.25,'noise');}
 
  const samples=new Map(),sampleFailures=new Set();let loadingSamples=false,retrySamplesAt=0;
- function preloadSamples(){if(!ctx||loadingSamples||Date.now()<retrySamplesAt)return;const queue=Object.entries(globalThis.OLYMPUS_SFX||{}).filter(([key])=>!samples.has(key)).sort(([a],[b])=>Number(b==='ui_hover_metal_click')-Number(a==='ui_hover_metal_click'));if(!queue.length)return;loadingSamples=true;let cursor=0;const worker=async()=>{while(cursor<queue.length){const [key,uri]=queue[cursor++];try{const bytes=await readGameAudioBytes(uri),buffer=await ctx.decodeAudioData(bytes);samples.set(key,buffer);sampleFailures.delete(key);}catch{sampleFailures.add(key);}}};Promise.all(Array.from({length:Math.min(4,queue.length)},worker)).finally(()=>{loadingSamples=false;retrySamplesAt=sampleFailures.size?Date.now()+15000:0;});}
+ function preloadSamples(){if(!ctx||loadingSamples||Date.now()<retrySamplesAt)return;const queue=Object.entries(globalThis.OLYMPUS_SFX||{}).filter(([key])=>!samples.has(key)).sort(([a],[b])=>Number(b.startsWith('ui_'))-Number(a.startsWith('ui_')));if(!queue.length)return;loadingSamples=true;let cursor=0;const worker=async()=>{while(cursor<queue.length){const [key,uri]=queue[cursor++];try{const bytes=await readGameAudioBytes(uri),buffer=await ctx.decodeAudioData(bytes);samples.set(key,buffer);sampleFailures.delete(key);}catch{sampleFailures.add(key);}}};Promise.all(Array.from({length:Math.min(4,queue.length)},worker)).finally(()=>{loadingSamples=false;retrySamplesAt=sampleFailures.size?Date.now()+15000:0;});}
 
  function sample(key,volume=1,delay=0){if(!ctx||prefs.muted||document.hidden)return false;const buffer=samples.get(key);if(!buffer)return false;if(active.size>=12){const old=active.values().next().value;try{old.stop();}catch{}active.delete(old);}const source=ctx.createBufferSource(),gain=ctx.createGain();source.buffer=buffer;gain.gain.value=volume;source.connect(gain);gain.connect(master);active.add(source);source.onended=()=>{active.delete(source);source.disconnect();gain.disconnect();source.buffer=null;};source.start(ctx.currentTime+delay);return true;}
  function sound(actor,phase,skill=false,events=[]){if(!ctx||prefs.muted)return;const hit=phase==='impact',eff=skill?(actor?.skill?.effects||[]).map(x=>x.type):[],element=({'火':'fire','冰':'ice','水':'water','地':'earth','風':'wind','光':'light','雷':'thunder','冥':'dark','暗':'dark'})[actor?.element]||'dark';
@@ -1100,7 +1100,7 @@ const CombatAudio=(()=>{
  function cry(c,dead,delay=0){const kind=cryKind(c),female=c.voiceType==='female'||/雅典娜|赫拉|阿芙洛|阿提|阿耳忒|德墨|珀耳|妮克|尼克斯|赫斯|蓋亞|塞勒|厄俄|女|寧芙/.test(c.name+' '+c.title);sample('hurt_'+(kind==='human'?(female?'female':'male'):kind),dead?.55:.4,delay);if(dead)sample('death_fall',.5,delay+.15);}
  function reactions(events,before,after){if(events.some(e=>e.kind==='revive'))sample('undying_ember_revive',.45);const ids=[...new Set(events.filter(e=>e.kind==='damage'&&e.amount>0).map(e=>e.target))],hits=ids.map(id=>{const a=before.find(u=>u.uid===id),b=after.find(u=>u.uid===id);return a&&b&&a.hp>0?{c:a,dead:b.hp<=0}:null;}).filter(Boolean).sort((a,b)=>Number(b.dead)-Number(a.dead));hits.slice(0,4).forEach((h,i)=>cry(h.c,h.dead,i*.045));}
 
- return {sound,stop,controls,reactions,hover(){unlock();sample('ui_hover_metal_click',.22);}};
+ return {sound,stop,controls,reactions,hover(){unlock();sample('ui_hover_glass_pop',.22);},click(){unlock();sample('ui_hover_metal_click',.34);}};
 })();
 
 globalThis.olympusAudio=CombatAudio;
@@ -1237,7 +1237,7 @@ function summonLimited(count){if(battle||state.mode!=='campaign'||![1,11].includ
 
 /* Pointer hover feedback: one sound per entry, capped during rapid traversal. */
 (()=>{
- let lastSound=0;
+ let lastSound=0,lastClick=0;
  const selector='button:not(:disabled),.card,[role="button"]';
  document.addEventListener('pointerover',e=>{
   if(e.pointerType!=='mouse'||!matchMedia('(hover:hover)').matches)return;
@@ -1249,6 +1249,12 @@ function summonLimited(count){if(battle||state.mode!=='campaign'||![1,11].includ
   const now=performance.now();if(now-lastSound>100){lastSound=now;globalThis.olympusAudio?.hover();}
  });
  document.addEventListener('pointerout',e=>{const el=e.target.closest?.(selector);if(el&&!el.contains(e.relatedTarget))el.classList.remove('ui-spring');});
+ document.addEventListener('click',e=>{
+  const el=e.target.closest?.(selector);
+  if(!el||el.matches(':disabled,[aria-disabled="true"]'))return;
+  const now=performance.now();if(now-lastClick<60)return;lastClick=now;
+  queueMicrotask(()=>globalThis.olympusAudio?.click());
+ },true);
  const previous=render;
  function values(){
   const result=new Map();
