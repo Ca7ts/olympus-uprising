@@ -374,7 +374,7 @@ let playing=false,busy=false,pauseAtRound=false,announcedRound=0,liveFx=[],entry
 let presentationEpoch=0;const pendingPresentation=new Set();
 function motionDuration(kind){const base={entry:900,round:1450,cast:1100,impact:650,skill:1600};const factor=delay===180?.55:delay===1000?1.25:1;const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;return Math.round((base[kind]||650)*(reduced?.55:factor));}
 function waitPresentation(ms,epoch){return new Promise(resolve=>{let record={id:null,resolve};record.id=setTimeout(()=>{pendingPresentation.delete(record);resolve(epoch===presentationEpoch);},ms);pendingPresentation.add(record);});}
-function cancelPresentation(){globalThis.olympusAudio?.stop();presentationEpoch++;for(const p of pendingPresentation){clearTimeout(p.id);p.resolve(false);}pendingPresentation.clear();busy=false;liveFx=[];entryUids=[];announcedRound=0;document.getElementById('stageOverlay').innerHTML='';}
+function cancelPresentation(){stopGoldCinematic();globalThis.olympusAudio?.stop();presentationEpoch++;for(const p of pendingPresentation){clearTimeout(p.id);p.resolve(false);}pendingPresentation.clear();busy=false;liveFx=[];entryUids=[];announcedRound=0;document.getElementById('stageOverlay').innerHTML='';}
 function roundWords(n){const digits=['','一','二','三','四','五','六','七','八','九'];return '第'+(n<10?digits[n]:n<20?'十'+digits[n%10]:digits[Math.floor(n/10)]+'十'+digits[n%10])+'回合';}
 async function showStage(kind,title,subtitle,epoch,color='#e2c68b'){
 const host=document.getElementById('stageOverlay');const rect=document.querySelector('.battle-board')?.getBoundingClientRect();const vw=window.innerWidth||1200,vh=window.innerHeight||800;const left=rect?Math.max(0,rect.left):0,top=rect?Math.max(0,rect.top):0;const width=rect?Math.max(0,Math.min(vw,rect.right)-left):vw;const height=rect?Math.max(0,Math.min(vh,rect.bottom)-top):vh;
@@ -384,7 +384,7 @@ const valid=await waitPresentation(ms,epoch);if(valid)host.innerHTML='';return v
 function canOpenBattleReplay(){return !busy&&(!battle||battle.done)&&!!battleRecording?.frames?.at(-1)?.done;}
 function updatePlaybackControls(){document.querySelectorAll('[data-action="battleReplay"]').forEach(b=>b.disabled=!canOpenBattleReplay());let btn=document.querySelector('[data-action="play"]');if(btn)btn.textContent=playing?'暫停':busy?'演出後繼續':'自動戰鬥';let stepBtn=document.querySelector('[data-action="step"]');if(stepBtn)stepBtn.disabled=playing||busy||!!battle?.done;const leaveBtn=document.querySelector('[data-action="leave"]');if(leaveBtn){leaveBtn.disabled=playing||busy;leaveBtn.textContent=playing?'自動戰鬥時無法撤退':battle?.done?'返回營地':'撤退';}}
 function scheduleNextAction(){if(fastBattleRequested&&!busy){void finishFastBattle();return;}if(!playing||busy||!battle||battle.done||timer!==null)return;timer=setTimeout(()=>{timer=null;void presentNextAction();},delay===180?100:delay===1000?450:220);}
-async function startEntrance(){const epoch=presentationEpoch;busy=true;entryUids=battle.units.filter(u=>u.active).map(u=>u.uid);fxDuration=motionDuration('entry');render();const valid=await showStage('entry','雙方列陣','戰鼓將起 · 諸神與凡人',epoch);if(!valid)return;entryUids=[];busy=false;render();scheduleNextAction();}
+async function startEntrance(){warmGoldVoices();const epoch=presentationEpoch;busy=true;entryUids=battle.units.filter(u=>u.active).map(u=>u.uid);fxDuration=motionDuration('entry');render();const valid=await showStage('entry','雙方列陣','戰鼓將起 · 諸神與凡人',epoch);if(!valid)return;entryUids=[];busy=false;render();scheduleNextAction();}
 async function presentNextAction(){if(busy||!battle||battle.done)return false;const epoch=presentationEpoch;busy=true;updatePlaybackControls();
 try{
 const projected=JSON.parse(JSON.stringify({...battle,events:[],impactUnits:null}));projected.autoPriority=playing;nextAction(projected);const events=projected.events||[];const round=events.find(e=>e.kind==='round');
@@ -393,9 +393,9 @@ if(pauseAtRound&&playing){pause();busy=false;render();toast('回合開始前已�
 const cast=events.find(e=>e.kind==='cast');if(cast){const actor=projected.units.find(u=>u.uid===cast.actor);if(!await showSkillInvocation(actor,cast,epoch))return false;}
 if(epoch!==presentationEpoch)return false;
 if(projected.last){const actor=battle.units.find(u=>u.uid===projected.last.actor);if(!await animateTargetEffects(actor,events,epoch))return false;}
-CombatAudio.reactions(events,battle.units,projected.impactUnits||projected.units);liveFx=events.filter(e=>!['round','cast','entry'].includes(e.kind));fxDuration=motionDuration('impact');
+CombatAudio.reactions(events,battle.units,projected.impactUnits||projected.units);liveFx=events.filter(e=>!['round','cast','entry'].includes(e.kind));fxDuration=goldImpactDuration||motionDuration('impact');
 battle={...projected,units:projected.impactUnits||projected.units,done:false,winner:null};render();
-if(!await waitPresentation(liveFx.length?fxDuration:100,epoch))return false;document.getElementById('stageOverlay').innerHTML='';
+if(!await waitPresentation(goldImpactDuration||(liveFx.length?fxDuration:100),epoch))return false;stopGoldCinematic();document.getElementById('stageOverlay').innerHTML='';
 battle=projected;battle.impactUnits=null;recordBattleFrame(battle);liveFx=[];entryUids=events.filter(e=>e.kind==='entry').map(e=>e.target);
 if(entryUids.length){fxDuration=motionDuration('entry');render();if(!await waitPresentation(fxDuration,epoch))return false;}
 entryUids=[];settle();return true;
@@ -593,7 +593,7 @@ document.addEventListener('pointermove',e=>{const t=touchDrag;if(!t||e.pointerId
 function endTouchDrag(e){const t=touchDrag;if(!t)return;clearTimeout(t.timer);if(t.active){const slot=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-action="slot"]');t.ghost.remove();if(e.type==='pointerup'&&slot){selected=t.id;assign(+slot.dataset.id);}dragClickUntil=Date.now()+500;}touchDrag=null;clearDropMarks();}
 document.addEventListener('pointerup',endTouchDrag);document.addEventListener('pointercancel',endTouchDrag);
 
-async function showSkillFilm(actor,cast,epoch){const host=document.getElementById('stageOverlay'),element=cast.element||actor?.element||'光',idx=Math.max(0,ELEMENTS.indexOf(element)),s=actor?.skill||{},effects=(s.effects||[]).map(x=>x.type),mode=effects.some(x=>['heal','regen','cleanse'].includes(x))?'blessing':effects.some(x=>['shield','guard'].includes(x))?'ward':'strike',ms=motionDuration('skill');host.innerHTML=`<div class="painted-skill ${mode}" style="--skill-time:${ms}ms;--fx-x:${idx%4*100/3}%;--fx-y:${Math.floor(idx/4)*100}%;--skill-color:${ELEMENT_COLORS[element]}"><div class="painted-skill-shade"></div><div class="painted-caster">${actor?avatar(CARD[actor.id]||actor,'cast-portrait'):''}</div><div class="painted-element"></div><div class="cast-signature"><strong>${esc(actor?.name||'')}</strong><span>${esc(cast.name)}</span></div></div>`;const valid=await waitPresentation(ms,epoch);if(valid)host.innerHTML='';return valid;}
+async function showSkillFilm(actor,cast,epoch){const gold=goldSkillRecord(actor,cast.name);if(gold){const ok=await playGoldUltimate(actor,gold,epoch);if(ok)await waitPresentation(goldImpactDuration||650,epoch);stopGoldCinematic();return ok;}const host=document.getElementById('stageOverlay'),element=cast.element||actor?.element||'光',idx=Math.max(0,ELEMENTS.indexOf(element)),s=actor?.skill||{},effects=(s.effects||[]).map(x=>x.type),mode=effects.some(x=>['heal','regen','cleanse'].includes(x))?'blessing':effects.some(x=>['shield','guard'].includes(x))?'ward':'strike',ms=motionDuration('skill');host.innerHTML=`<div class="painted-skill ${mode}" style="--skill-time:${ms}ms;--fx-x:${idx%4*100/3}%;--fx-y:${Math.floor(idx/4)*100}%;--skill-color:${ELEMENT_COLORS[element]}"><div class="painted-skill-shade"></div><div class="painted-caster">${actor?avatar(CARD[actor.id]||actor,'cast-portrait'):''}</div><div class="painted-element"></div><div class="cast-signature"><strong>${esc(actor?.name||'')}</strong><span>${esc(cast.name)}</span></div></div>`;const valid=await waitPresentation(ms,epoch);if(valid)host.innerHTML='';return valid;}
 
 
 // Each subtitle addresses its own atlas cell. Decode before changing either image or subtitle.
@@ -982,6 +982,7 @@ function battleGrowthReport(b){const report=battleRecruitRewards(b);if(state.mod
 function skillSequenceRow(actor,kind){if(['heal','shield','buff','cleanse'].includes(kind))return 3;if(['水','冰','風'].includes(actor.element))return 1;if(['火','地'].includes(actor.element))return 2;return 0;}
 function skillInvocationMarkup(actor,name){return '<div class="skill-invocation"><div class="skill-ghost">'+avatar(CARD[actor.id]||actor,'invocation-portrait')+'</div><div class="skill-title"><small>'+esc(actor.name)+' · 奧義</small><strong>'+esc(name)+'</strong></div></div>';}
 async function showSkillInvocation(actor,cast,epoch){
+ if(goldSkillRecord(actor,cast.name))return true;
  if(!actor)return showStage('cast',cast.name,'奧義',epoch);
  const board=document.querySelector('.battle-board'),source=board?.querySelector('[data-id="'+actor.uid+'"]');if(!board||!source)return true;
  const host=document.getElementById('stageOverlay'),r=board.getBoundingClientRect(),p=source.getBoundingClientRect();Object.assign(host.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
@@ -996,6 +997,7 @@ async function showSkillInvocation(actor,cast,epoch){
 }
 function makeSkillSprite(layer,row,frame,x,y,size=180){const sprite=document.createElement('i');sprite.className='skill-sequence-sprite';sprite.style.cssText='--sequence-row:'+(row*100/3)+'%;background-position:'+(frame*20)+'% '+(row*100/3)+'%;left:'+x+'px;top:'+y+'px;width:'+size+'px;height:'+size+'px';layer.append(sprite);return sprite;}
 async function animateSkillSequence(actor,events,epoch){
+ const gold=goldSkillRecord(actor,actor?.skill?.name);if(gold)return playGoldUltimate(actor,gold,epoch);
  const board=document.querySelector('.battle-board');if(!board||!actor)return true;const source=board.querySelector('[data-id="'+actor.uid+'"]');if(!source)return true;
  const host=document.getElementById('stageOverlay'),rect=board.getBoundingClientRect();Object.assign(host.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px'});host.innerHTML='<div class="target-vfx-layer skill-sequence-layer"></div>';const layer=host.firstElementChild;
  const quiet=document.body.classList.contains('quiet-motion')||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1162,7 +1164,7 @@ const BattleScore=(()=>{
  function stop(){epoch++;player.pause();player.removeAttribute('src');player.load();key='';ownerSession=null;playPending=false;failed=false;}
  function choose(){if(sceneState||globalThis.olympusFilmActive)return null;if(!battle){const page=globalThis.olympusMusicHub||view;if(page==='exit')return null;return 'page:'+(PAGE_MUSIC_INFO[page]?page:'formation');}if(battle.done)return null;const n=nodes[battle.nodeId];if(battle.units.some(u=>u.active&&u.hp>0&&/^O\d+$/.test(u.id)))divineSession=battle.musicSession;return divineSession===battle.musicSession?'gods':battleMusicScene(n);}
  function play(){if(playPending||!player.paused)return;const token=epoch;playPending=true;Promise.resolve(player.play()).catch(()=>{}).finally(()=>{if(token===epoch)playPending=false;});}
- function sync(){const wanted=choose();if(!wanted){if(key)stop();return;}const isPage=wanted.startsWith('page:'),id=isPage?wanted.slice(5):wanted,src=isPage?globalThis.OLYMPUS_PAGE_MUSIC?.[id]:globalThis.OLYMPUS_BATTLE_MUSIC?.[id],session=isPage?'pages':battle.musicSession;if(!src){if(key)stop();return;}if(ownerSession!==session||wanted!==key){stop();ownerSession=session;key=wanted;player.src=src;player.loop=true;failed=false;}const volume=Number(isPage?prefs.pageVolume:prefs.volume);player.volume=Math.max(0,Math.min(1,Number.isFinite(volume)?volume:.28))*(isPage?.65:.7);player.muted=!!(isPage?prefs.pageMuted:prefs.muted);if(document.hidden||player.muted){player.pause();return;}if(!failed)play();}
+ function sync(){const wanted=choose();if(!wanted){if(key)stop();return;}const isPage=wanted.startsWith('page:'),id=isPage?wanted.slice(5):wanted,src=isPage?globalThis.OLYMPUS_PAGE_MUSIC?.[id]:globalThis.OLYMPUS_BATTLE_MUSIC?.[id],session=isPage?'pages':battle.musicSession;if(!src){if(key)stop();return;}if(ownerSession!==session||wanted!==key){stop();ownerSession=session;key=wanted;player.src=src;player.loop=true;failed=false;}const volume=Number(isPage?prefs.pageVolume:prefs.volume);player.volume=Math.max(0,Math.min(1,Number.isFinite(volume)?volume:.28))*(isPage?.65:.7)*(globalThis.goldVoiceActive?.3:1);player.muted=!!(isPage?prefs.pageMuted:prefs.muted);if(document.hidden||player.muted){player.pause();return;}if(!failed)play();}
  function unlock(){if(failed){failed=false;player.load();}sync();}
  player.addEventListener('error',()=>{failed=true;});
  function controls(){const wanted=choose(),title=wanted?(wanted.startsWith('page:')?PAGE_MUSIC_INFO[wanted.slice(5)]:BATTLE_MUSIC_INFO[wanted].title):'旅程暫歇';return '<label><input type="checkbox" data-page-mute '+(prefs.pageMuted?'checked':'')+'> 靜音頁面與主選單音樂</label><label>頁面音樂音量 <input type="range" min="0" max="100" aria-label="頁面音樂音量" data-page-volume value="'+Math.round(prefs.pageVolume*100)+'"><output>'+Math.round(prefs.pageVolume*100)+'%</output></label><label><input type="checkbox" data-score-mute '+(prefs.muted?'checked':'')+'> 靜音戰鬥配樂</label><label>戰鬥配樂音量 <input type="range" min="0" max="100" aria-label="戰鬥配樂音量" data-score-volume value="'+Math.round(prefs.volume*100)+'"><output>'+Math.round(prefs.volume*100)+'%</output></label><p class="meta">目前配樂：'+title+' · 全遊戲單首播放。</p>'+(failed?'<p class="meta">音樂載入失敗，請確認網路後點擊畫面重試。</p>':'');}
@@ -1319,3 +1321,41 @@ function summonLimited(count){if(battle||state.mode!=='campaign'||![1,11].includ
   }
  };
 })();
+
+
+/* Gold ultimates match both stable card identity and the real skill name. */
+let goldCinematic=null,goldImpactDuration=0;
+const goldVoiceCache=new Map();
+function goldSkillRecord(actor,name){const row=globalThis.OLYMPUS_GOLD_ULTIMATES?.[actor?.id];return actor?.rarity===4&&row?.skill===name?row:null;}
+function warmGoldVoices(){if(!battle)return;for(const u of battle.units.filter(u=>u.active)){const row=goldSkillRecord(u,u.skill?.name);if(!row||goldVoiceCache.has(row.src))continue;const a=new Audio(row.src);a.preload='auto';a.load();goldVoiceCache.set(row.src,a);}while(goldVoiceCache.size>18){const [key,a]=goldVoiceCache.entries().next().value;releaseStoryAudio(a);goldVoiceCache.delete(key);}}
+function stopGoldCinematic(){const fx=goldCinematic;goldCinematic=null;goldImpactDuration=0;if(fx){clearInterval(fx.timer);releaseStoryAudio(fx.audio);fx.finish(false);fx.root.remove();}globalThis.goldVoiceActive=false;globalThis.olympusScore?.sync();}
+function playGoldUltimate(actor,row,epoch){
+ stopGoldCinematic();
+ const host=document.getElementById('stageOverlay');Object.assign(host.style,{left:'0',top:'0',width:'100vw',height:'100dvh'});
+ const quiet=document.documentElement.classList.contains('quiet-motion')||matchMedia('(prefers-reduced-motion:reduce)').matches;
+ const style={雷:['gold-ult-elements',0],水:['gold-ult-elements',1],火:['gold-ult-elements',2],地:['gold-ult-elements',3],光:['gold-ult-mystic',0],冥:['gold-ult-mystic',1],冰:['gold-ult-mystic',2],風:['gold-ult-mystic',3]}[actor.element]||['gold-ult-mystic',0];
+ const role=actor.skill.power>0?'strike':actor.skill.effects?.some(e=>e.type==='shield')?'ward':'blessing';
+ host.innerHTML='<section class="gold-ultimate '+role+(quiet?' reduced':'')+'" style="--gold-art:var(--art-'+style[0]+');--gold-x:'+(style[1]%2*100)+'%;--gold-y:'+Math.floor(style[1]/2)*100+'%;--gold-color:'+ELEMENT_COLORS[actor.element]+'"><div class="gold-ultimate-art"></div><div class="gold-ultimate-rays"></div><div class="gold-ultimate-rune">'+esc(EICON[actor.element])+'</div><div class="gold-ultimate-portrait">'+avatar(actor,'gold-portrait')+'</div><div class="gold-ultimate-copy"><small>'+esc(actor.name)+' · 神權覺醒</small><h2>'+esc(row.skill)+'</h2><p>'+esc(row.whisper)+'</p></div><div class="gold-ultimate-ring"></div><div class="gold-ultimate-particles">'+Array.from({length:quiet?0:24},(_,i)=>'<i style="--i:'+i+'"></i>').join('')+'</div></section>';
+ const root=host.firstElementChild,audio=goldVoiceCache.get(row.src)||new Audio(row.src);goldVoiceCache.delete(row.src);
+ let prefs={volume:.45,muted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-combat-audio')||'{}'));}catch{}
+ audio.volume=Math.max(0,Math.min(1,(Number(prefs.volume)||0)*1.25));audio.preload='auto';
+ globalThis.goldVoiceActive=!prefs.muted;globalThis.olympusScore?.sync();
+ return new Promise(resolve=>{
+  let settled=false,burst=false,fallback=!!prefs.muted,started=performance.now(),lastTime=0,lastProgress=started,virtualStart=started;
+  const finish=value=>{if(settled)return;settled=true;resolve(value);};
+  const fx=goldCinematic={root,audio,finish,timer:null};
+  function erupt(){if(burst)return;burst=true;root.classList.add('erupt');root.querySelector('p').textContent=row.roar;goldImpactDuration=Math.max(900,Math.min(7500,(row.duration-row.burstAt)*1000+250));CombatAudio.sound(actor,'impact',true,[{kind:actor.skill.power>0?'damage':'buff'}]);finish(true);}
+  function useFallback(){if(fallback)return;fallback=true;virtualStart=performance.now()-Math.min(audio.currentTime,row.burstAt)*1000;audio.pause();globalThis.goldVoiceActive=false;globalThis.olympusScore?.sync();}
+  audio.onerror=useFallback;
+  if(!fallback)audio.play().catch(useFallback);
+  fx.timer=setInterval(()=>{
+   if(goldCinematic!==fx)return;
+   if(epoch!==presentationEpoch){stopGoldCinematic();return;}
+   const now=performance.now();
+   if(!fallback){if(audio.currentTime>lastTime+.01){lastTime=audio.currentTime;lastProgress=now;}else if(now-lastProgress>2200)useFallback();}
+   const t=fallback?(now-virtualStart)/1000:audio.currentTime;
+   if(!burst&&t>=row.burstAt)erupt();
+   if(!burst&&audio.ended)erupt();
+  },25);
+ });
+}

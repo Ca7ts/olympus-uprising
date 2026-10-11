@@ -589,3 +589,25 @@ body.quiet-motion button.ui-spring,body.quiet-motion .card.ui-spring{animation:n
 .battle-board .unit.manual-actor{outline:4px solid #ffe198!important;outline-offset:-2px;box-shadow:inset 0 0 0 7px #a67b344d,0 0 20px #f1c95e99!important}
 .battle-board .unit.manual-target{outline:4px solid #ff7971!important;outline-offset:-2px;box-shadow:inset 0 0 0 7px #ff493a44,0 0 20px #ff584c99!important}
 .manual-selection-label{position:absolute;top:25px;left:50%;transform:translateX(-50%);z-index:8;padding:2px 7px;background:#17121aeb;border:1px solid #ffda8a;border-radius:4px;color:#ffe4a6;font-size:11px;white-space:nowrap;pointer-events:none}
+/* Full viewport gold-card revelation, eight elemental paintings. */
+.gold-ultimate{position:absolute;inset:0;overflow:hidden;background:#08050cef;isolation:isolate;--gold-color:#e7bb59}
+.gold-ultimate-art{position:absolute;inset:0;background-image:var(--gold-art);background-size:200% 200%;background-position:var(--gold-x) var(--gold-y);opacity:.5;transform:scale(1.03);filter:sepia(.7) saturate(.6);transition:filter .18s,opacity .18s}
+.gold-ultimate-rays{position:absolute;inset:-40%;background:repeating-conic-gradient(from 0deg at 50% 0%,transparent 0 9deg,#ffe4a533 10deg 11deg,transparent 12deg 24deg);animation:gold-rays 5s ease-in-out infinite}
+.gold-ultimate-rune{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:clamp(180px,32vw,430px);line-height:1;color:var(--gold-color);opacity:.22;text-shadow:0 0 45px currentColor}
+.gold-ultimate-portrait{position:absolute;left:9%;top:12%;width:28vw;max-width:350px;filter:drop-shadow(0 0 24px #e4bc65aa);animation:gold-reveal .65s ease-out both}
+.gold-ultimate-portrait .avatar{width:100%!important;height:auto!important;aspect-ratio:2/3}
+.gold-ultimate-copy{position:absolute;left:37%;right:7%;top:32%;padding:26px;background:linear-gradient(90deg,#080610ef,#100b1399,transparent);text-shadow:0 3px 8px #000}
+.gold-ultimate-copy small{color:#f3d494;letter-spacing:.15em}.gold-ultimate-copy h2{font-size:clamp(24px,4vw,64px);color:#fff0bd;line-height:1.5}.gold-ultimate-copy p{font-size:clamp(17px,2vw,30px);color:#f7e7d0;margin-top:16px}
+.gold-ultimate-ring{position:absolute;left:50%;top:50%;width:35vmin;height:35vmin;border:5px double var(--gold-color);border-radius:50%;opacity:0;transform:translate(-50%,-50%)}
+.gold-ultimate-particles i{position:absolute;left:50%;top:50%;width:4px;height:45px;background:var(--gold-color);opacity:0;transform:rotate(calc(var(--i)*15deg)) translateY(-15vh)}
+.gold-ultimate.erupt{background:#08050c99}.gold-ultimate.erupt .gold-ultimate-art{filter:none;opacity:.86;animation:gold-impact .75s ease-out both}
+.gold-ultimate.erupt .gold-ultimate-rays{opacity:.25}.gold-ultimate.erupt .gold-ultimate-portrait{opacity:.25;transition:opacity .25s}.gold-ultimate.erupt .gold-ultimate-copy{top:65%;transition:top .35s}.gold-ultimate.erupt .gold-ultimate-ring{animation:gold-ring .95s ease-out both}
+.gold-ultimate.erupt .gold-ultimate-particles i{animation:gold-particle .85s ease-out both}
+.gold-ultimate.ward.erupt .gold-ultimate-ring,.gold-ultimate.blessing.erupt .gold-ultimate-ring{animation-duration:1.6s}
+@keyframes gold-rays{50%{transform:rotate(5deg);opacity:.6}}
+@keyframes gold-reveal{from{opacity:0;transform:translateX(-8vw)}to{opacity:1;transform:none}}
+@keyframes gold-impact{0%{transform:scale(1.1)}25%{transform:translate(3px,-2px) scale(1.02)}50%{transform:translate(-2px,1px) scale(1.04)}100%{transform:scale(1.01)}}
+@keyframes gold-ring{0%{opacity:.8;transform:translate(-50%,-50%) scale(.4)}100%{opacity:0;transform:translate(-50%,-50%) scale(5)}}
+@keyframes gold-particle{0%{opacity:.85;transform:rotate(calc(var(--i)*15deg)) translateY(-10vh)}100%{opacity:0;transform:rotate(calc(var(--i)*15deg)) translateY(-85vh)}}
+.gold-ultimate.reduced *{animation:none!important;transition:none!important}
+@media(max-width:700px){.gold-ultimate-portrait{left:5%;top:16%;width:35vw}.gold-ultimate-copy{left:30%;right:3%;top:35%;padding:15px}.gold-ultimate-copy h2{font-size:25px}}
