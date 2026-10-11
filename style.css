@@ -718,3 +718,51 @@ body.quiet-motion :is(.panel,.below-roster,.world-masthead,.arena-banner,.curren
 @media(prefers-reduced-motion:reduce){
  html body :is(.panel,.below-roster,.world-masthead,.arena-banner,.current-node,.camp-growth,.revisit-panel,.achievement){animation:none!important}
 }
+
+/* FRAME_VARIANTS: decorate containers only; card/portrait rules remain untouched. */
+html body :is(.battle-bonds,.bond-summary-card,.bond-link,.camp-explanation,.scene-effect-row,.story-reading,.defeat-direction,.replay-controls,.filter-options[popover],.settings-list>label,details):not(.card *):not(.title-screen *):not(#frame-exclusion){
+ border:1px solid transparent;
+ border-image:var(--art-ui_frame) 18% / 12px / 0 stretch!important;
+}
+/* Quiet bronze for archives and written information. */
+html body :is(.catalog-view .below-roster,.catalog-view>.phase-head,.rule-layout>.panel,.story-prose,.prologue-text,.story-reading,.battle-record,.achievement,.catalog-preview-panel):not(#frame-exclusion){
+ border-image-source:var(--art-frame_archive)!important;
+}
+/* Forged metal for controls, equipment and advancement. */
+html body :is(.nav,.toolbar,.command-panel,.ascension-panel,.camp-facilities article,.stat-grid>div,.enhance-modal,.enhance-portrait-panel,.replay-controls):not(#frame-exclusion){
+ border-image-source:var(--art-frame_forge)!important;
+}
+html body :is(.enhance-portrait-panel,.replay-arena):not(#frame-exclusion){
+ border:1px solid transparent;
+ border-image-slice:18%;
+ border-image-width:14px;
+ border-image-repeat:stretch;
+}
+/* Eight element assets: primary frames surround the field; dual-terrain accents surround its information. */
+html body :is(.battle-board,.replay-arena):not(#frame-exclusion){
+ border-image-source:var(--battle-frame,var(--art-ui_frame))!important;
+ border-image-width:22px!important;
+}
+html body .arena-banner:not(#frame-exclusion),
+html body .battle-layout :is(.scene-effect-panel,.battle-overview>.phase-head):not(#frame-exclusion){
+ border-image-source:var(--battle-accent-frame,var(--art-ui_frame))!important;
+ border-image-width:17px!important;
+}
+html body :is(.battle-board,.replay-arena):not(#frame-exclusion){animation:element-frame-breathe 4s ease-in-out infinite}
+@keyframes element-frame-breathe{
+ 0%,100%{box-shadow:0 4px 12px #0006,0 0 5px color-mix(in srgb,var(--frame-glow,#b58c44) 5%,transparent)}
+ 50%{box-shadow:0 4px 12px #0006,0 0 12px color-mix(in srgb,var(--frame-glow,#b58c44) 15%,transparent)}
+}
+/* Passive parchment variants keep the existing entry/exit timing and dark readable ink. */
+html body :is(.film-subtitles,.journey-film-copy,.mission-body h2,.current-node h2):not(#frame-exclusion){background-image:var(--art-banner_story)!important}
+html body :is(.stage-copy,.center-band,.replay-caption):not(#frame-exclusion){background-image:var(--art-banner_battle)!important}
+html body :is(.hint,.direct-command>span,#toast):not(#frame-exclusion){background-image:var(--art-banner_notice)!important}
+html body.quiet-motion :is(.battle-board,.replay-arena):not(#frame-exclusion){animation:none!important}
+@media(prefers-reduced-motion:reduce){html body :is(.battle-board,.replay-arena):not(#frame-exclusion){animation:none!important}}
+
+/* Above the scenery layer, with an empty center and no pointer hit area. */
+html body .battle-board>.battle-frame-ornament{
+ display:block;position:absolute!important;inset:0;z-index:3;pointer-events:none;
+ border:1px solid transparent;border-image:var(--battle-frame,var(--art-ui_frame)) 18% / 22px / 0 stretch;
+ background:none;
+}
