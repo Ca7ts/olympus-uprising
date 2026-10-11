@@ -1077,7 +1077,7 @@ const CombatAudio=(()=>{
  function explosion(){texture('地',true,true);voice(66,28,.7,.3);voice(1400,100,.6,.25,'noise');}
 
  const samples=new Map(),sampleFailures=new Set();let loadingSamples=false,retrySamplesAt=0;
- function preloadSamples(){if(!ctx||loadingSamples||Date.now()<retrySamplesAt)return;const queue=Object.entries(globalThis.OLYMPUS_SFX||{}).filter(([key])=>!samples.has(key));if(!queue.length)return;loadingSamples=true;let cursor=0;const worker=async()=>{while(cursor<queue.length){const [key,uri]=queue[cursor++];try{const bytes=await readGameAudioBytes(uri),buffer=await ctx.decodeAudioData(bytes);samples.set(key,buffer);sampleFailures.delete(key);}catch{sampleFailures.add(key);}}};Promise.all(Array.from({length:Math.min(4,queue.length)},worker)).finally(()=>{loadingSamples=false;retrySamplesAt=sampleFailures.size?Date.now()+15000:0;});}
+ function preloadSamples(){if(!ctx||loadingSamples||Date.now()<retrySamplesAt)return;const queue=Object.entries(globalThis.OLYMPUS_SFX||{}).filter(([key])=>!samples.has(key)).sort(([a],[b])=>Number(b==='ui_hover_metal_click')-Number(a==='ui_hover_metal_click'));if(!queue.length)return;loadingSamples=true;let cursor=0;const worker=async()=>{while(cursor<queue.length){const [key,uri]=queue[cursor++];try{const bytes=await readGameAudioBytes(uri),buffer=await ctx.decodeAudioData(bytes);samples.set(key,buffer);sampleFailures.delete(key);}catch{sampleFailures.add(key);}}};Promise.all(Array.from({length:Math.min(4,queue.length)},worker)).finally(()=>{loadingSamples=false;retrySamplesAt=sampleFailures.size?Date.now()+15000:0;});}
 
  function sample(key,volume=1,delay=0){if(!ctx||prefs.muted||document.hidden)return false;const buffer=samples.get(key);if(!buffer)return false;if(active.size>=12){const old=active.values().next().value;try{old.stop();}catch{}active.delete(old);}const source=ctx.createBufferSource(),gain=ctx.createGain();source.buffer=buffer;gain.gain.value=volume;source.connect(gain);gain.connect(master);active.add(source);source.onended=()=>{active.delete(source);source.disconnect();gain.disconnect();source.buffer=null;};source.start(ctx.currentTime+delay);return true;}
  function sound(actor,phase,skill=false,events=[]){if(!ctx||prefs.muted)return;const hit=phase==='impact',eff=skill?(actor?.skill?.effects||[]).map(x=>x.type):[],element=({'火':'fire','冰':'ice','水':'water','地':'earth','風':'wind','光':'light','雷':'thunder','冥':'dark','暗':'dark'})[actor?.element]||'dark';
@@ -1100,7 +1100,7 @@ const CombatAudio=(()=>{
  function cry(c,dead,delay=0){const kind=cryKind(c),female=c.voiceType==='female'||/雅典娜|赫拉|阿芙洛|阿提|阿耳忒|德墨|珀耳|妮克|尼克斯|赫斯|蓋亞|塞勒|厄俄|女|寧芙/.test(c.name+' '+c.title);sample('hurt_'+(kind==='human'?(female?'female':'male'):kind),dead?.55:.4,delay);if(dead)sample('death_fall',.5,delay+.15);}
  function reactions(events,before,after){if(events.some(e=>e.kind==='revive'))sample('undying_ember_revive',.45);const ids=[...new Set(events.filter(e=>e.kind==='damage'&&e.amount>0).map(e=>e.target))],hits=ids.map(id=>{const a=before.find(u=>u.uid===id),b=after.find(u=>u.uid===id);return a&&b&&a.hp>0?{c:a,dead:b.hp<=0}:null;}).filter(Boolean).sort((a,b)=>Number(b.dead)-Number(a.dead));hits.slice(0,4).forEach((h,i)=>cry(h.c,h.dead,i*.045));}
 
- return {sound,stop,controls,reactions};
+ return {sound,stop,controls,reactions,hover(){unlock();sample('ui_hover_metal_click',.22);}};
 })();
 
 globalThis.olympusAudio=CombatAudio;
@@ -1197,7 +1197,7 @@ function detailedStats(c,live){
  const ratio=u.max?Math.max(0,u.hp/u.max):0,hpClass=ratio>.7?'stat-positive':ratio>0&&(u.side===1?ratio>.35:ratio>=.35)?'stat-wounded':ratio>0?'stat-critical':'stat-neutral';
  sources.hp.unshift('生命 '+u.hp+' / '+u.max+'（'+Math.round(ratio*100)+'%）');if(u.shield)sources.hp.push('現有護盾 '+u.shield+'，獨立於生命');
  const rows=[['hp','生命',u.hp,u.max,hpClass],['atk','攻擊',attack,base.atk],['def','防禦',defense,base.def],['spd','速度',spd,base.spd]];
- return '<div class="stat-grid live-stat-grid">'+rows.map(([k,label,value,origin,color])=>{const delta=value-origin;const title=[label+'：'+Math.round(value),...(sources[k].length?sources[k]:['無增減益']),...(notes[k]||[])];if(k==='atk')title.push('顯示常駐效果後的等效攻擊；屬性克制、暴擊、技能倍率依目標另計。');if(k==='def')title.push('含减傷／易傷的等效防禦；實際防禦 '+Math.round(bondDefense(b,u))+'，承傷倍率 '+incoming.toFixed(3)+'。穿透依攻擊者另計。');if(k!=='hp')title.push('按實際乘算後淨結果著色；與本形態基礎值比較。');return '<div class="stat-cell" tabindex="0" title="'+esc(title.join('\n'))+'" aria-label="'+esc(title.join('；'))+'"><span>'+label+'</span><strong class="'+(color||(Math.abs(delta)<.01?'stat-neutral':delta>0?'stat-positive':'stat-negative'))+'">'+Math.round(value)+'</strong><small>'+(k==='hp'?Math.round(ratio*100)+'%':Math.abs(delta)<.01?'基礎':(delta>0?'+':'')+Math.round(delta))+'</small></div>';}).join('')+'</div>';
+ return '<div class="stat-grid live-stat-grid">'+rows.map(([k,label,value,origin,color])=>{const delta=value-origin;const title=[label+'：'+Math.round(value),...(sources[k].length?sources[k]:['無增減益']),...(notes[k]||[])];if(k==='atk')title.push('顯示常駐效果後的等效攻擊；屬性克制、暴擊、技能倍率依目標另計。');if(k==='def')title.push('含减傷／易傷的等效防禦；實際防禦 '+Math.round(bondDefense(b,u))+'，承傷倍率 '+incoming.toFixed(3)+'。穿透依攻擊者另計。');if(k!=='hp')title.push('按實際乘算後淨結果著色；與本形態基礎值比較。');return '<div class="stat-cell" data-stat-unit="'+u.uid+'" data-stat-key="'+k+'" tabindex="0" title="'+esc(title.join('\n'))+'" aria-label="'+esc(title.join('；'))+'"><span>'+label+'</span><strong class="'+(color||(Math.abs(delta)<.01?'stat-neutral':delta>0?'stat-positive':'stat-negative'))+'">'+Math.round(value)+'</strong><small>'+(k==='hp'?Math.round(ratio*100)+'%':Math.abs(delta)<.01?'基礎':(delta>0?'+':'')+Math.round(delta))+'</small></div>';}).join('')+'</div>';
 }
 
 function heroHammerFinale(layer,hits,duration,quiet,stage){
@@ -1234,3 +1234,40 @@ function cardSymbolStrip(c,stars){
 function limitedPoolGroups(){return RARITIES.map((_,i)=>cards.filter(c=>c.id!==HERO_ID&&!c.storyExclusive&&c.limited&&c.rarity===i&&c.poolUnlock<=state.cleared));}
 function limitedPoolView(){const groups=limitedPoolGroups(),weights=recruitRules().weights,total=groups.reduce((a,g,i)=>a+(g.length?weights[i]:0),0),count=groups.flat().length,embers=campProgress().embers,disabled=state.mode!=='campaign'||!count;return '<section class="limited-pool panel panel-pad"><article class="story-exclusive-showcase">'+avatar(CARD[HERO_ID],'mini-avatar')+'<div><span class="limited-label">劇情限定 · 唯一角色</span><h3>厄里昂</h3><p>新遊戲劇情取得，僅持有一位。卡色進化沿用同一角色；所有召喚池皆無法抽取。</p></div><button class="small" data-action="inspect" data-id="H001">角色詳情</button></article><div class="phase-head"><div><span class="limited-label">劇情限定 · 三十道守護誓約</span><h2>關隘守護者召喚</h2><p>已解鎖 '+count+' / 30 名 · 通關對應關卡後永久加入本池</p></div><div class="row"><button data-action="summonLimited" data-id="1" '+(disabled||embers<1000?'disabled':'')+'>限定 1 抽 · 1000 餘燼</button><button data-action="summonLimited" data-id="11" '+(disabled||embers<10000?'disabled':'')+'>限定 11 抽 · 10000 餘燼</button></div></div><p>非保底抽取：2% 限定守護者、98% 已解鎖普通卡。連續 49 抽未出限定，第 50 抽必得限定；抽中限定（含重複）即重置，11 抽逐抽累計並跨次保存。限定保底與普通池保底互相獨立。限定指卡池專屬，不設限時；重複轉同色殘魂。</p><p class="limited-pity">限定保底：'+ensureRecruitment().limitedPity+' / 50 · 最多再 '+(50-ensureRecruitment().limitedPity)+' 抽必出限定</p><p class="meta">以下為抽中限定後的卡色分布；限定內同色角色等機率。98% 普通卡部分依普通池卡色權重抽取，不觸發普通池保底。'+groups.map((g,i)=>g.length?'<span class="rarity-label r'+i+'">'+RARITIES[i]+' '+(weights[i]/total*100).toFixed(2)+'%</span>':'').filter(Boolean).join(' ／ ')+'</p><details><summary>查看 30 名守護者、解鎖條件與個別機率</summary><div class="guardian-pool-list">'+cards.filter(c=>c.limited).map(c=>'<article class="r'+c.rarity+'">'+avatar(c,'mini-avatar')+'<div><strong>'+esc(c.name)+'</strong><p>第 '+c.poolUnlock+' 關 · '+esc(nodes[c.guardianNode].name)+'</p><small>'+RARITIES[c.rarity]+'卡 · '+(c.poolUnlock<=state.cleared?'已開放 · 非保底單抽 '+(weights[c.rarity]/total/groups[c.rarity].length*2).toFixed(4)+'% · 保底抽 '+(weights[c.rarity]/total/groups[c.rarity].length*100).toFixed(2)+'%':'未通關 · 機率 0%')+'</small></div><button class="small" data-action="inspect" data-id="'+c.id+'">詳情</button></article>').join('')+'</div></details></section>';}
 function summonLimited(count){if(battle||state.mode!=='campaign'||![1,11].includes(count))return;const groups=limitedPoolGroups(),weights=recruitRules().weights,active=groups.map((g,i)=>g.length?i:-1).filter(i=>i>=0),price=count===11?10000:1000,camp=campProgress();if(!active.length){toast('先通過第一關，解鎖限定守護者。');return;}if(camp.embers<price){toast('餘燼不足。');return;}const r=ensureRecruitment(),own=new Set(r.owned),results=[],total=active.reduce((a,i)=>a+weights[i],0);for(let k=0;k<count;k++){const guaranteed=r.limitedPity>=49,isLimited=guaranteed||Math.random()<.02,drawGroups=isLimited?groups:poolGroups(),drawActive=drawGroups.map((g,i)=>g.length?i:-1).filter(i=>i>=0),drawTotal=drawActive.reduce((a,i)=>a+weights[i],0);let roll=Math.random()*drawTotal,tier=drawActive.at(-1);for(const i of drawActive){roll-=weights[i];if(roll<0){tier=i;break;}}const c=drawGroups[tier][randomInt(0,drawGroups[tier].length-1)],duplicate=own.has(c.id),souls=duplicate?recruitRules().soulBase[tier]:0;if(duplicate)r.souls[tier]=Math.min(1000000000,r.souls[tier]+souls);else own.add(c.id);r.limitedPity=c.limited?0:r.limitedPity+1;results.push({c,duplicate,souls,guaranteed});}camp.embers-=price;r.owned=[...own];r.draws+=count;persist();render();const d=document.getElementById('detail');d.className='summon-dialog';d.removeAttribute('aria-labelledby');d.innerHTML='<h2>限定守護者 · 召喚結果</h2><p>'+count+' 張 · 消耗 '+price+' 餘燼 · 限定保底 '+r.limitedPity+' / 50</p><div class="summon-results">'+results.map(({c,duplicate,souls,guaranteed})=>'<article class="summon-card r'+c.rarity+'">'+avatar(c,'summon-portrait')+'<span class="limited-label">'+(c.limited?(guaranteed?'保底限定':'限定'):'普通')+' · '+RARITIES[c.rarity]+'卡</span><h3>'+esc(c.name)+'</h3><p>'+(duplicate?'重複 · 同色殘魂 +'+souls:(c.limited?'新守護誓約 · 已加入收藏':'新同行者 · 已加入收藏'))+'</p><button data-action="selectForFormation" data-id="'+c.id+'">查看／布陣</button></article>').join('')+'</div><button data-action="close">收下並返回</button>';if(!d.open)d.showModal();}
+
+/* Pointer hover feedback: one sound per entry, capped during rapid traversal. */
+(()=>{
+ let lastSound=0;
+ const selector='button:not(:disabled),.card,[role="button"]';
+ document.addEventListener('pointerover',e=>{
+  if(e.pointerType!=='mouse'||!matchMedia('(hover:hover)').matches)return;
+  const el=e.target.closest?.(selector);
+  if(!el||el.matches(':disabled,[aria-disabled="true"]')||el.contains(e.relatedTarget))return;
+  if(!document.body.classList.contains('quiet-motion')&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
+   el.classList.remove('ui-spring');void el.offsetWidth;el.classList.add('ui-spring');
+  }
+  const now=performance.now();if(now-lastSound>100){lastSound=now;globalThis.olympusAudio?.hover();}
+ });
+ document.addEventListener('pointerout',e=>{const el=e.target.closest?.(selector);if(el&&!el.contains(e.relatedTarget))el.classList.remove('ui-spring');});
+ const previous=render;
+ function values(){
+  const result=new Map();
+  document.querySelectorAll('[data-action="unit"] .unit-vitals small,[data-stat-unit] strong').forEach(el=>{
+   const unit=el.closest('[data-action="unit"]'),cell=el.closest('[data-stat-unit]');
+   const key=unit?'unit:'+unit.dataset.id:'stat:'+cell.dataset.statUnit+':'+cell.dataset.statKey;
+   result.set(key,{text:el.textContent,el});
+  });return result;
+ }
+ render=function(){
+  const session=battle?.musicSession,before=values();previous();
+  if(!battle||session!==battle.musicSession||document.hidden||document.body.classList.contains('quiet-motion')||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  for(const [key,current] of values()){
+   if(!before.has(key)||before.get(key).text===current.text)continue;
+   const rect=current.el.getBoundingClientRect();if(!rect.width||rect.bottom<0||rect.top>innerHeight)continue;
+   current.el.animate([{transform:'scale(1)'},{transform:'translateY(-3px) scale(1.1)'},{transform:'scale(1)'}],{duration:300,easing:'ease-out'});
+   const echo=document.createElement('span');echo.className='battle-number-echo';echo.textContent=current.text;
+   const style=getComputedStyle(current.el);Object.assign(echo.style,{left:rect.left+'px',top:rect.top+'px',fontSize:style.fontSize,color:style.color});
+   document.body.append(echo);setTimeout(()=>echo.remove(),700);
+  }
+ };
+})();
