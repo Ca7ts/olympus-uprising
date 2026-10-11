@@ -811,19 +811,19 @@ document.addEventListener('click',e=>{if(!e.target.closest('[data-action="play"]
 
 /* The live board remains visible: launch, travel, impact, then numerical results. */
 function vfxCell(kind,element){if(kind==='heal')return 8;if(kind==='shield')return 9;if(kind==='cleanse')return 10;if(kind==='buff')return 11;if(kind==='debuff')return 7;return Math.max(0,ELEMENTS.indexOf(element));}
-async function animateTargetEffects(actor,events,epoch){
-if(events.some(e=>e.kind==='cast'))return animateSkillSequence(actor,events,epoch);
+async function animateTargetEffects(actor,events,epoch,skillProjectile=false){
+if(!skillProjectile&&events.some(e=>e.kind==='cast'))return animateSkillSequence(actor,events,epoch);
 const board=document.querySelector('.battle-board');if(!board||!actor)return true;
-const targets=events.filter(e=>e.target&&['damage','heal','shield','buff','debuff','cleanse'].includes(e.kind));if(!targets.length)return true;
+const rawTargets=events.filter(e=>e.target&&['damage','heal','shield','buff','debuff','cleanse'].includes(e.kind));if(!rawTargets.length)return true;const targets=skillProjectile?[...rawTargets.reduce((map,e)=>{const old=map.get(e.target);if(!old||e.kind==='damage')map.set(e.target,e);return map;},new Map()).values()]:rawTargets;
 const find=uid=>board.querySelector('[data-action="unit"][data-id="'+uid+'"]');const source=find(actor.uid);if(!source)return true;
 const host=document.getElementById('stageOverlay');const rect=board.getBoundingClientRect();Object.assign(host.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px'});host.innerHTML='<div class="target-vfx-layer"></div>';const layer=host.firstElementChild;
 const reduced=document.documentElement.classList.contains('quiet-motion')||matchMedia('(prefers-reduced-motion: reduce)').matches;const duration=reduced?160:Math.max(480,motionDuration('skill')*.52);
 const sourceRect=source.getBoundingClientRect();const start={x:sourceRect.left+sourceRect.width/2-rect.left,y:sourceRect.top+sourceRect.height/2-rect.top};
-CombatAudio.sound(actor,'launch',false,events);const signature=Array.from(actor.skill?.name||actor.name).reduce((n,c)=>n+c.codePointAt(0),0);const arc=(signature%3-1)*48;const seen=new Set();const hits=[];
+CombatAudio.sound(actor,'launch',skillProjectile,events);const signature=Array.from(actor.skill?.name||actor.name).reduce((n,c)=>n+c.codePointAt(0),0);const arc=(signature%3-1)*48;const seen=new Set();const hits=[];
 for(const e of targets){const cell=vfxCell(e.kind,e.element||actor.element),key=e.target+'-'+cell;if(seen.has(key))continue;seen.add(key);const target=find(e.target);if(!target)continue;const r=target.getBoundingClientRect(),end={x:r.left+r.width/2-rect.left,y:r.top+r.height/2-rect.top};const angle=Math.atan2(end.y-start.y,end.x-start.x)*180/Math.PI;
 const sprite=document.createElement('i');sprite.className='target-projectile';sprite.style.setProperty('--cell-x',cell%4*100/3+'%');sprite.style.setProperty('--cell-y',Math.floor(cell/4)*50+'%');sprite.style.left=start.x+'px';sprite.style.top=start.y+'px';layer.appendChild(sprite);
 sprite.animate([{transform:`translate(-50%,-50%) rotate(${angle}deg) scale(.3)`,opacity:0},{transform:`translate(-50%,-50%) rotate(${angle}deg) scale(.8)`,opacity:1,offset:.18},{transform:`translate(calc(-50% + ${(end.x-start.x)*.55+arc}px),calc(-50% + ${(end.y-start.y)*.55}px)) rotate(${angle}deg) scale(.9)`,opacity:1,offset:.58},{transform:`translate(calc(-50% + ${end.x-start.x}px),calc(-50% + ${end.y-start.y}px)) rotate(${angle}deg) scale(1)`,opacity:1}],{duration,easing:'cubic-bezier(.3,.1,.6,1)',fill:'forwards'});hits.push({end,cell,target});}
-if(!await waitPresentation(duration,epoch))return false;CombatAudio.sound(actor,'impact',false,events);layer.innerHTML='';
+if(!await waitPresentation(duration,epoch))return false;CombatAudio.sound(actor,'impact',skillProjectile,events);layer.innerHTML='';
 for(const {end,cell} of hits){if(actor.element==='冰')iceShatter(layer,end.x,end.y,450,reduced);const burst=document.createElement('i');burst.className='target-impact';burst.style.left=end.x+'px';burst.style.top=end.y+'px';burst.style.setProperty('--cell-x',cell%4*100/3+'%');burst.style.setProperty('--cell-y',Math.floor(cell/4)*50+'%');layer.appendChild(burst);burst.animate([{transform:'translate(-50%,-50%) scale(.35)',opacity:.1},{transform:'translate(-50%,-50%) scale(1.15)',opacity:1,offset:.4},{transform:'translate(-50%,-50%) scale(1.35)',opacity:0}],{duration:reduced?160:450,fill:'forwards'});}
 // Hand off at contact so HP and floating numbers appear during the impact burst.
 return true;
@@ -1019,7 +1019,7 @@ async function showSkillInvocation(actor,cast,epoch){
 }
 function makeSkillSprite(layer,row,frame,x,y,size=180){const sprite=document.createElement('i');sprite.className='skill-sequence-sprite';sprite.style.cssText='--sequence-row:'+(row*100/3)+'%;background-position:'+(frame*20)+'% '+(row*100/3)+'%;left:'+x+'px;top:'+y+'px;width:'+size+'px;height:'+size+'px';layer.append(sprite);return sprite;}
 async function animateSkillSequence(actor,events,epoch){
- const gold=goldSkillRecord(actor,actor?.skill?.name);if(gold)return playGoldUltimate(actor,gold,epoch);
+ const gold=goldSkillRecord(actor,actor?.skill?.name);if(gold){if(!await playGoldUltimate(actor,gold,epoch))return false;return animateTargetEffects(actor,events.filter(e=>e.kind!=='cast'),epoch,true);}
  const board=document.querySelector('.battle-board');if(!board||!actor)return true;const source=board.querySelector('[data-id="'+actor.uid+'"]');if(!source)return true;
  const host=document.getElementById('stageOverlay'),rect=board.getBoundingClientRect();Object.assign(host.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px'});host.innerHTML='<div class="target-vfx-layer skill-sequence-layer"></div>';const layer=host.firstElementChild;
  const quiet=document.body.classList.contains('quiet-motion')||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1423,7 +1423,7 @@ function playGoldUltimate(actor,row,epoch){
   let settled=false,burst=false,fallback=!!prefs.muted,started=performance.now(),lastTime=0,lastProgress=started,virtualStart=started;
   const finish=value=>{if(settled)return;settled=true;resolve(value);};
   const fx=goldCinematic={root,audio,finish,timer:null};
-   async function erupt(){if(burst)return;burst=true;root.classList.add('erupt');goldImpactDuration=0;CombatAudio.sound(actor,'impact',true,[{kind:actor.skill.power>0?'damage':'buff'}]);if(!await waitPresentation(1000,epoch)){finish(false);return;}root.animate([{opacity:1,filter:'blur(0px)'},{opacity:0,filter:'blur(18px)'}],{duration:1000,easing:'ease-out',fill:'forwards'});const faded=await waitPresentation(1000,epoch);goldImpactDuration=0;finish(faded);}
+   async function erupt(){if(burst)return;burst=true;root.classList.add('erupt');goldImpactDuration=0;if(!await waitPresentation(1000,epoch)){finish(false);return;}root.animate([{opacity:1,filter:'blur(0px)'},{opacity:0,filter:'blur(18px)'}],{duration:1000,easing:'ease-out',fill:'forwards'});const faded=await waitPresentation(1000,epoch);goldImpactDuration=0;finish(faded);}
   function useFallback(){if(fallback)return;fallback=true;virtualStart=performance.now()-Math.min(audio.currentTime,row.burstAt)*1000;audio.pause();globalThis.goldVoiceActive=false;globalThis.olympusScore?.sync();}
   audio.onerror=useFallback;
   if(!fallback)audio.play().catch(useFallback);
