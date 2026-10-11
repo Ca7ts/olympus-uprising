@@ -859,3 +859,69 @@ html body .story-exclusive-showcase{background:linear-gradient(110deg,#4937218c,
 @media(prefers-reduced-motion:reduce){.camp-story-slides i,html body .pool-rates>article::after{animation:none!important}.camp-story-slides i:not(:first-child){opacity:0!important}}
 body.quiet-motion .camp-story-slides i,body.quiet-motion .pool-rates>article::after{animation:none!important}
 body.quiet-motion .camp-story-slides i:not(:first-child){opacity:0!important}
+
+/* Viewport-based responsive layout; desktop artwork and geometry remain unchanged. */
+@media(max-width:1099px){
+ html body .shell{width:100%;max-width:100%;padding-inline:10px}
+ html body .top{flex-wrap:wrap;gap:10px;padding-inline:12px}
+ html body .nav{max-width:100%;overflow-x:auto;flex-wrap:nowrap}
+ html body .nav button{flex-shrink:0}
+ html body :is(.setup-layout,.battle-layout,.catalog-view){min-width:0}
+}
+@media(max-width:900px) and (orientation:portrait){
+ html,body{max-width:100%;overflow-x:clip}
+ html body{padding-bottom:env(safe-area-inset-bottom)}
+ html body .shell{padding:8px max(6px,env(safe-area-inset-left)) 16px;max-width:100%;width:100%}
+ html body :is(.setup-layout,.catalog-view,.battle-layout){display:flex;flex-direction:column;width:100%;gap:12px}
+ html body :is(.formation-workspace,.battle-board,.below-roster,.selected-detail,.battle-sidebar,.battle-overview){width:100%;min-width:0;max-width:100%;position:relative;top:auto}
+ html body .battle-layout>.battle-board{order:0;height:auto;min-height:0;max-height:none;overflow:hidden;container-type:normal}
+ html body .battle-layout>.battle-sidebar{order:1;display:flex;flex-direction:column;max-height:none;overflow:visible}
+ html body .battle-layout>.battle-overview{order:2;max-height:none;overflow:visible}
+ html body .battle-sidebar>.panel{max-height:none;overflow:visible}
+ html body .battle-board .army-grid.enemy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:8px;min-height:0}
+ html body .battle-board .army-grid.enemy>.unit{width:100%;min-width:0;max-width:none;height:148px;min-height:148px}
+ html body .battle-board .army-grid.enemy .painted-avatar{width:64px;height:96px;max-width:100%}
+ /* Lower allied cards become a thumb-scrollable overlapping hand, preserving all nine slots. */
+ html body .battle-board .army-grid:not(.enemy){display:flex;align-items:flex-end;overflow-x:auto;overflow-y:hidden;gap:0;padding:32px 18px 18px;min-height:215px;touch-action:pan-x pan-y;overscroll-behavior-x:contain}
+ html body .battle-board .army-grid:not(.enemy)>.unit{flex:0 0 100px;width:100px;min-width:100px;max-width:100px;height:154px;min-height:154px;margin:0 0 0 -20px;position:relative;transition:transform .18s ease}
+ html body .battle-board .army-grid:not(.enemy)>.unit:first-child{margin-left:0}
+ html body .battle-board .army-grid:not(.enemy)>.unit.manual-actor{transform:translateY(-12px) scale(1.1)!important;z-index:8}
+ html body .battle-board .army-grid:not(.enemy) .painted-avatar{width:68px;height:102px}
+ html body .round-controls .center-band:not(#mobile-round){padding:22px 6%!important}
+ html body .direct-command{padding:6px;gap:5px}
+ html body .direct-command>span{font-size:12px;padding:14px 20px!important}
+ html body .formation-grid{padding:6px;gap:6px}
+ html body .icon-slot{min-height:146px;padding:5px}
+ html body .icon-slot .painted-avatar{width:68px;height:102px}
+ /* Selection uses a tap-driven class, never hover, so scrolling does not expand cards. */
+ html body .formation-workspace .catalog{display:flex;align-items:flex-end;gap:0;overflow-x:auto;overflow-y:hidden;padding:30px 16px 18px;min-height:235px;touch-action:pan-x pan-y;overscroll-behavior-x:contain}
+ html body .formation-workspace .catalog>.card{flex:0 0 116px;width:116px;min-width:116px;margin-left:-24px;padding:8px!important;position:relative;transition:transform .18s ease;transform:none!important;animation:none!important}
+ html body .formation-workspace .catalog>.card:first-child{margin-left:0}
+ html body .formation-workspace .catalog>.card .painted-avatar{width:88px;height:132px}
+ html body .formation-workspace .catalog>.card>:is(p,small,.origin-label,.limited-label){display:none}
+ html body .formation-workspace .catalog>.card>h3{font-size:12px;line-height:1.4;max-height:34px;overflow:hidden}
+ html body .formation-workspace .catalog>.card>.badge{font-size:10px}
+ html body .formation-workspace .catalog>.card.mobile-peek{transform:translateY(-10px) scale(1.08)!important;z-index:10;outline:3px solid #ffe3a4!important}
+ html body .formation-workspace .catalog>.card.mobile-peek>h3{max-height:none}
+ html body .catalog-view .catalog{grid-template-columns:repeat(2,minmax(0,1fr))}
+ html body .toolbar{display:flex;flex-wrap:wrap;gap:6px}
+ html body .toolbar input[type=text],html body #search{width:100%;min-width:0}
+ html body .filter-box{min-width:0;flex:1 1 42%}
+ html body .filter-trigger{width:100%}
+ html body .top h1{font-size:20px}
+ html body .top .top-right{flex-wrap:wrap}
+ html body :is(.current-node,.rule-layout,.divine-research,.pool-rates){display:grid;grid-template-columns:1fr}
+ html body .current-node-art{min-height:300px}
+ html body .phase-head{flex-wrap:wrap;gap:10px}
+ html body .hearth-banner{min-height:360px;padding:16px}
+ html body .camp-banner-copy{padding:12px!important}
+ html body dialog{max-width:96vw}
+ html body :is(button,select){min-height:44px}
+}
+@media(hover:none) and (pointer:coarse){
+ html body .ui-spring{animation:none!important}
+ html body :is(.card,.icon-unit,.icon-slot):hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+ html body .formation-workspace .catalog>.card,html body .battle-board .army-grid>.unit{transition:none!important}
+}
