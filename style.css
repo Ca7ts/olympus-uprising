@@ -624,3 +624,26 @@ dialog.catalog-skill-preview{position:fixed;inset:0;margin:0;padding:0;width:100
 .catalog-skill-preview header p{font-size:12px;color:#c4bcab;margin:4px 0}
 .catalog-skill-preview footer{position:absolute;inset:auto 0 0;z-index:100002;text-align:center;line-height:1.7;padding:18px 24px;background:linear-gradient(transparent,#080b12ed);color:#e3d7bc;pointer-events:none}
 .catalog-skill-preview #stageOverlay{z-index:1!important;pointer-events:none}
+
+/* BUTTON_TEXTURE_SKIN_START — remove this block to restore 我的按鈕 */
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id){
+ background-color:#171719!important;
+ background-image:var(--art-button_texture,url("assets/button_texture.png"))!important;
+ background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;
+ border-style:solid!important;border-radius:3px!important;
+ border-image-source:var(--art-button_texture,url("assets/button_texture.png"))!important;
+ border-image-slice:25% 9% fill!important;border-image-width:12px!important;border-image-repeat:stretch!important;
+ text-shadow:0 1px 1px #000,0 2px 4px #000c;
+ box-shadow:inset 0 1px 2px #ffe5b326,inset 0 -2px 4px #0009,0 3px 0 #08090c,0 5px 9px #0006!important;
+ transition:box-shadow .15s ease,translate .08s ease,filter .15s ease!important;
+}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id).ui-spring{animation:none!important}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id):hover:not(:disabled):not([aria-disabled="true"]){transform:none!important;box-shadow:inset 0 0 8px #efc57430,0 3px 0 #08090c,0 0 12px #e5b65e55,0 5px 10px #0008!important}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id):active:not(:disabled):not([aria-disabled="true"]){animation:none!important;transform:none!important;translate:0 2px;box-shadow:inset 0 3px 8px #000b,inset 0 -1px 2px #d5ab5a33,0 1px 0 #08090c,0 0 7px #deb45e35!important}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id):is(.active,[aria-pressed="true"]){box-shadow:inset 0 0 9px #efc57444,0 0 0 1px #e5c583,0 0 12px #d9a64644!important}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id):is(.card,.icon-unit,.icon-slot,.enemy-mini){outline:2px solid var(--tone,#b29a6f);outline-offset:-2px}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id):is(.selected,.inspected,.manual-actor,.manual-target){box-shadow:inset 0 0 0 2px #ffe4a4,0 0 0 2px #f4ce78,0 0 17px #edbd5b88!important}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id):disabled,html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id)[aria-disabled="true"]{filter:saturate(.3);opacity:.48;translate:none;box-shadow:inset 0 2px 6px #0009!important}
+html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id):focus-visible{outline:2px solid #ffe0a0!important;outline-offset:3px!important}
+@media(prefers-reduced-motion:reduce){html body :is(button,.button,.btn,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]):not(#unused-button-skin-id){transition:none!important}}
+/* BUTTON_TEXTURE_SKIN_END */
