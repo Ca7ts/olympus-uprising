@@ -1,0 +1,38 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>台灣人聲・五神試聽</title><style>body{background:#14151c;color:#e4cea0;font-family:serif;max-width:700px;margin:40px auto;padding:20px}button{display:block;width:100%;padding:20px;margin:14px 0;background:#22232b;color:#f2d390;border:1px solid #a18a55;font-size:18px}p{line-height:1.8}</style><h1>台灣人聲・五神試聽</h1><p>只念技能名稱，以語速與音高設計莊嚴感。實際聲線取決於你的瀏覽器與系統。</p><div id="samples"></div><button id="stop">停止</button><p id="status" role="status"></p><script>// Native browser speech: no API keys, remote generation calls or audio downloads.
+const BrowserSpeech=(()=>{
+ const synth=globalThis.speechSynthesis;let voices=[],active=null;
+ const refresh=()=>{voices=synth?.getVoices()||[];};refresh();synth?.addEventListener('voiceschanged',refresh);
+ function choose(c){refresh();const tw=voices.filter(v=>/^(zh|cmn)[-_]TW$/i.test(v.lang)),zh=voices.filter(v=>/^(zh|cmn)(-|_|$)/i.test(v.lang));const pool=tw.length?tw:zh;const female=c.gender==='female'||c.voiceType==='female';const hint=female?/female|曉|晓|hsiao|hanhan|美嘉|meijia|yating/i:/yunjhe|雲哲|云哲|zhiwei|志偉|male\b/i;return [...pool].sort((a,b)=>(Number(hint.test(b.name)&&!( !female&&/female/i.test(b.name)))*4+Number(b.localService))-(Number(hint.test(a.name)&&!(!female&&/female/i.test(a.name)))*4+Number(a.localService)))[0];}
+ function clip(text,character={}){return {native:true,text,character,src:'speech:'+text,duration:Math.max(1.5,text.length/3.5)};}
+ function audio(record){
+  const a=new EventTarget();let utterance=null,elapsed=0,started=0,watch=null,deadline=null,disposed=false;
+  Object.assign(a,{volume:1,ended:false,paused:true,duration:record.duration||3,preload:'auto'});
+  Object.defineProperty(a,'currentTime',{get:()=>elapsed+(started?(performance.now()-started)/1000:0),set:v=>{elapsed=v;started=0;}});
+  const emit=name=>{a['on'+name]?.();a.dispatchEvent(new Event(name));};
+  const clean=()=>{clearTimeout(watch);clearTimeout(deadline);if(utterance)utterance.onstart=utterance.onend=utterance.onerror=null;};
+  a.dispose=()=>{disposed=true;clean();if(active===a){synth?.cancel();active=null;}started=0;utterance=null;};
+  a.pause=()=>{if(started)elapsed=a.currentTime;started=0;a.paused=true;if(active===a)synth?.pause();};
+  a.removeAttribute=()=>a.dispose();a.load=()=>{};
+  a.play=()=>{
+   if(disposed||!synth||!globalThis.SpeechSynthesisUtterance)return Promise.reject(Error('此瀏覽器未提供語音合成'));
+   if(active===a&&utterance&&a.paused){a.paused=false;started=performance.now();synth.resume();return Promise.resolve();}
+   active?.dispose();active=a;a.paused=false;a.ended=false;
+   const c=record.character||{},u=utterance=new SpeechSynthesisUtterance(record.text.replaceAll('・','，'));u.lang='zh-TW';const v=choose(c);if(v)u.voice=v;
+   u.rate=Math.max(.72,Math.min(1.05,1+Number(c.rate??-12)/100));u.pitch=Math.max(.65,Math.min(1.2,1+Number(c.pitch??-5)/100));u.volume=Math.max(0,Math.min(1,a.volume));
+   return new Promise((resolve,reject)=>{
+    watch=setTimeout(()=>{a.dispose();reject(Error('語音啟動逾時，請點擊試聽啟用'));emit('error');},5000);
+    u.onstart=()=>{clearTimeout(watch);started=performance.now();emit('playing');resolve();};
+    u.onend=()=>{elapsed=a.currentTime;started=0;a.ended=true;a.paused=true;clean();if(active===a)active=null;utterance=null;emit('ended');};
+    u.onerror=()=>{clean();started=0;if(active===a)active=null;utterance=null;reject(Error('語音無法播放'));emit('error');};
+    deadline=setTimeout(()=>{a.dispose();emit('error');},Math.max(20000,record.text.length*1000));
+    synth.cancel();synth.resume();synth.speak(u);
+   });
+  };return a;
+ }
+ function status(){refresh();if(!synth)return '此瀏覽器不支援語音合成';return voices.some(v=>/^(zh|cmn)[-_]TW$/i.test(v.lang))?'已找到台灣中文人聲':'未找到台灣中文人聲，將使用可用中文聲音或系統 zh-TW 預設';}
+ const stop=()=>active?.dispose();addEventListener('pagehide',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+ return {clip,audio,stop,status};
+})();
+function speechClipAudio(clip){return clip.native?BrowserSpeech.audio(clip):new Audio(clip.src);}
+
+const rows=[{"id":"O001","name":"宙斯","skill":"奧林帕斯・天罰","text":"奧林帕斯・天罰","kind":"gold-skill","element":"雷","gender":"male","age":"elder","form":"神祇","voice":"cmn-TW-Standard-B","rate":-14,"pitch":-9,"direction":"莊嚴、敬畏，清楚宣告技能名稱；重音漸強，收尾堅定，不追加台詞。","castingBasis":"依既有配音角色及神話形象設計；未記載年齡的角色使用表演年齡。"},{"id":"O002","name":"波賽頓","skill":"三叉戟・覆世狂潮","text":"三叉戟・覆世狂潮","kind":"gold-skill","element":"水","gender":"male","age":"elder","form":"神祇","voice":"cmn-TW-Standard-B","rate":-17,"pitch":-9,"direction":"莊嚴、敬畏，清楚宣告技能名稱；重音漸強，收尾堅定，不追加台詞。","castingBasis":"依既有配音角色及神話形象設計；未記載年齡的角色使用表演年齡。"},{"id":"O003","name":"黑帝斯","skill":"冥河・亡者敕令","text":"冥河・亡者敕令","kind":"gold-skill","element":"冥","gender":"male","age":"elder","form":"神祇","voice":"cmn-TW-Standard-B","rate":-20,"pitch":-12,"direction":"莊嚴、敬畏，清楚宣告技能名稱；重音漸強，收尾堅定，不追加台詞。","castingBasis":"依既有配音角色及神話形象設計；未記載年齡的角色使用表演年齡。"},{"id":"O004","name":"雅典娜","skill":"埃癸斯・不落之城","text":"埃癸斯・不落之城","kind":"gold-skill","element":"光","gender":"female","age":"adult","form":"神祇","voice":"cmn-TW-Standard-A","rate":-12,"pitch":-4,"direction":"莊嚴、敬畏，清楚宣告技能名稱；重音漸強，收尾堅定，不追加台詞。","castingBasis":"依既有配音角色及神話形象設計；未記載年齡的角色使用表演年齡。"},{"id":"O005","name":"阿瑞斯","skill":"血戰・百槍屠陣","text":"血戰・百槍屠陣","kind":"gold-skill","element":"火","gender":"male","age":"adult","form":"神祇","voice":"cmn-TW-Standard-B","rate":-9,"pitch":-4,"direction":"莊嚴、敬畏，清楚宣告技能名稱；重音漸強，收尾堅定，不追加台詞。","castingBasis":"依既有配音角色及神話形象設計；未記載年齡的角色使用表演年齡。"}];const status=document.getElementById("status");status.textContent=BrowserSpeech.status();for(const row of rows){const b=document.createElement("button");b.textContent=row.name+" — "+row.skill;b.onclick=()=>{const a=BrowserSpeech.audio(BrowserSpeech.clip(row.skill,row));status.textContent=BrowserSpeech.status()+" · "+row.skill;a.onended=()=>status.textContent="試聽完畢";a.onerror=()=>status.textContent="無法播放，請確認系統中文人聲設定";a.play().catch(()=>a.onerror());};document.getElementById("samples").append(b);}document.getElementById("stop").onclick=()=>BrowserSpeech.stop();</script></html>

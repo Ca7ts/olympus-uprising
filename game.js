@@ -568,7 +568,7 @@ Promise.all(paths.map(src=>new Promise(resolve=>{const image=new Image();image.o
 /* 0.7 story films and skill presentation. Voice clips are optional recorded assets. */
 let sceneTimer=null,sceneWatch=null,currentSceneAudio=null,sceneState=null,sceneSerial=0;
 const sceneVoiceQueue=new Map();
-function warmSceneVoices(s){const wanted=s.lines.slice(s.index,s.index+3).map(storyVoiceClip).filter(Boolean);for(const [src,a] of sceneVoiceQueue)if(!wanted.some(c=>c.src===src)){releaseStoryAudio(a);sceneVoiceQueue.delete(src);}for(const clip of wanted)if(!sceneVoiceQueue.has(clip.src)&&currentSceneAudio?.getAttribute("src")!==clip.src){const a=new Audio(clip.src);a.preload="auto";a.load();sceneVoiceQueue.set(clip.src,a);}}
+function warmSceneVoices(s){const wanted=s.lines.slice(s.index,s.index+3).map(storyVoiceClip).filter(Boolean);for(const [src,a] of sceneVoiceQueue)if(!wanted.some(c=>c.src===src)){releaseStoryAudio(a);sceneVoiceQueue.delete(src);}for(const clip of wanted)if(!sceneVoiceQueue.has(clip.src)&&currentSceneAudio?.getAttribute("src")!==clip.src){const a=speechClipAudio(clip);a.preload="auto";a.load();sceneVoiceQueue.set(clip.src,a);}}
 globalThis.OLYMPUS_VOICE=globalThis.OLYMPUS_VOICE||{};
 function storyLines(n){return [n.name,...n.prologue.split(/(?<=[。！？])|\n/).map(s=>s.trim()).filter(Boolean),'突破守軍防線。'+n.hint];}
 function clearSceneClock(){clearInterval(sceneWatch);sceneWatch=null;currentSceneAudio?._goldStop?.();clearTimeout(sceneTimer);sceneTimer=null;if(currentSceneAudio){releaseStoryAudio(currentSceneAudio);currentSceneAudio=null;}}
@@ -581,7 +581,7 @@ const valid=()=>sceneState===s&&serial===sceneSerial;
 const next=()=>{if(finished||!valid()||s.paused)return;finished=true;advance();};
 const textMs=Math.max(2200,Math.min(9000,text.length*110))*(globalThis.storyPace||1);
 function useText(){if(fallback||!valid())return;fallback=true;reading=0;if(currentSceneAudio){releaseStoryAudio(currentSceneAudio);currentSceneAudio=null;}p.textContent=text;d.querySelector('.film-counter').textContent=String(s.index+1).padStart(2,'0')+' / '+s.lines.length+' · 文字播放';}
-if(clip){const a=currentSceneAudio=sceneVoiceQueue.get(clip.src)||new Audio(clip.src);sceneVoiceQueue.delete(clip.src);a.preload='auto';a.volume=.8;bindStoryGold(a,clip,text,p);a.onended=next;a.onerror=useText;a.play().catch(()=>{if(valid())useText();});}else useText();
+if(clip){const a=currentSceneAudio=sceneVoiceQueue.get(clip.src)||speechClipAudio(clip);sceneVoiceQueue.delete(clip.src);a.preload='auto';a.volume=.8;bindStoryGold(a,clip,text,p);a.onended=next;a.onerror=useText;a.play().catch(()=>{if(valid())useText();});}else useText();
 warmSceneVoices(s);
 sceneWatch=setInterval(()=>{
  if(!valid())return;
@@ -698,7 +698,7 @@ document.addEventListener('change',e=>{const k=e.target.dataset.pref;if(!k)retur
 let filmVoice=null,captionFrame=0;
 function stopFilmVoice(){cancelAnimationFrame(captionFrame);releaseStoryAudio(filmVoice);filmVoice=null;}
 window.addEventListener('pagehide',stopFilmVoice);
-function voiceFilm(f,text){const clip=f.frameMs?globalThis.OLYMPUS_OPENING?.[f.index]:storyVoiceClip(text);if(!clip)return false;const caption=panel.querySelector('.journey-caption'),a=filmVoice=new Audio(clip.src);a.volume=.8;caption.scrollTop=0;bindStoryGold(a,clip,text,caption);a.onended=()=>{if(film===f&&filmVoice===a)advanceFilm();};a.onerror=()=>{if(filmVoice===a){stopFilmVoice();scheduleFilm();}};if(!f.paused)a.play().catch(()=>{if(filmVoice!==a)return;f.paused=true;panel.querySelector('[data-journey="film-pause"]').textContent='播放旁白';});return true;}
+function voiceFilm(f,text){const clip=storyVoiceClip(text);if(!clip)return false;const caption=panel.querySelector('.journey-caption'),a=filmVoice=speechClipAudio(clip);a.volume=.8;caption.scrollTop=0;bindStoryGold(a,clip,text,caption);a.onended=()=>{if(film===f&&filmVoice===a)advanceFilm();};a.onerror=()=>{if(filmVoice===a){stopFilmVoice();scheduleFilm();}};if(!f.paused)a.play().catch(()=>{if(filmVoice!==a)return;f.paused=true;panel.querySelector('[data-journey="film-pause"]').textContent='播放旁白';});return true;}
 function opening(){playFilm('序章 · 厄里昂的起義',[[0,0,"你叫厄里昂。十五歲這年，神庭收走村莊最後的麥種，也帶走了拒絕交糧的母親。"],[0,1,"你生來高大，手臂烙印被族人視為不祥。你不知道，那是凡人母親與隕落神裔留下的血脈。"],[0,2,"當徵糧官把達蒙推向祭壇，你舉起礦鎚。壓垮你的不是飢餓，而是神明要求人們感謝苦難。"],[0,3,"你救下達蒙，卻救不回所有人。逃出的工匠、醫者與萬族同伴，決定一起守住最後的種子。"],[0,4,"征途將持續多年。你會在盜火者面前覺醒，在戰神面前付出代價，學會以自己的意志駕馭神力。"],[0,5,"你將成為半神，卻不必成為新的主人。率領同行者穿越三十道防線，讓眾生重新選擇命運。"]],()=>{progress().opening=true;persist();enter();},10000);}
 async function paintFilm(){stopFilmVoice();if(!film)return;const f=film,index=f.index,token=++filmToken,[chapter,cell,text]=f.frames[index],key='chapter-'+String(chapter+1).padStart(2,'0');
 const captionBanner=panel.querySelector('.journey-film-copy');if(index>0)await scrollBannerMotion(captionBanner,true);if(film!==f||token!==filmToken)return;void scrollBannerMotion(captionBanner,false);const img=panel.querySelector('.journey-film-art');img.classList.toggle('hero-origin-film',!!f.frameMs);if(f.frameMs&&!img.querySelector('.hero-film-portrait'))img.insertAdjacentHTML('beforeend','<div class="hero-film-portrait" aria-hidden="true"></div>');img.style.backgroundImage='var(--realm-sky)';img.style.backgroundSize='cover';img.style.backgroundPosition='center';img.style.aspectRatio=globalThis.OLYMPUS_SHOT_RATIOS?.[key]||1;img.setAttribute('aria-label',text);
@@ -1200,7 +1200,7 @@ globalThis.olympusScore=BattleScore;
 queueMicrotask(()=>BattleScore.sync());
 (function(){const previous=render;render=function(){previous();BattleScore.sync();};})();
 
-(function(){let panel;document.addEventListener('click',e=>{const b=e.target.closest('[data-action="quickSettings"]');if(!b)return;if(!panel){panel=document.createElement('dialog');panel.className='quick-settings-modal';document.body.append(panel);}panel.innerHTML='<header><h2 id="quick-settings-title">基本設定</h2><button type="button" data-settings-close>關閉 ✕</button></header><div class="settings-list"><h3>音樂</h3>'+globalThis.olympusScore.controls()+'<h3>音效</h3>'+globalThis.olympusAudio.controls()+'</div><p class="meta">音量與靜音會自動儲存。戰鬥中可隨時開啟調整。</p>';panel.setAttribute('aria-labelledby','quick-settings-title');panel.querySelector('[data-settings-close]').onclick=()=>panel.close();if(!panel.open)panel.showModal();});})();
+(function(){let panel;document.addEventListener('click',e=>{const b=e.target.closest('[data-action="quickSettings"]');if(!b)return;if(!panel){panel=document.createElement('dialog');panel.className='quick-settings-modal';document.body.append(panel);}panel.innerHTML='<header><h2 id="quick-settings-title">基本設定</h2><button type="button" data-settings-close>關閉 ✕</button></header><div class="settings-list"><h3>音樂</h3>'+globalThis.olympusScore.controls()+'<h3>音效</h3>'+globalThis.olympusAudio.controls()+browserVoiceControls()+'</div><p class="meta">音量與靜音會自動儲存。戰鬥中可隨時開啟調整。</p>';panel.setAttribute('aria-labelledby','quick-settings-title');panel.querySelector('[data-settings-close]').onclick=()=>panel.close();if(!panel.open)panel.showModal();});})();
 
 // Result stingers share the battle sound-effects controls and play once at settlement.
 (()=>{let active=null,resultKind=null;function sync(){if(!active)return;let p={volume:.45,muted:false};try{Object.assign(p,JSON.parse(localStorage.getItem('olympus-combat-audio')||'{}'));}catch{}active.volume=p.muted?0:Math.max(0,Math.min(1,Number(p.volume)||0))*(resultKind==='victory'?.6:1);}
@@ -1209,9 +1209,10 @@ document.addEventListener('input',e=>{if(e.target.matches('[data-combat-volume]'
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)active.pause();});})();
 
 // Narration uses recorded clips; gold progress estimates spoken timing from audio energy.
-function storyVoiceClip(text){return globalThis.OLYMPUS_STORY_NARRATION?.[text];}
-function releaseStoryAudio(a){if(!a)return;a._goldStop?.();a.onended=a.onerror=null;a.pause();a.removeAttribute('src');a.load();}
+function storyVoiceClip(text){return BrowserSpeech.clip(text,{gender:'male',rate:-14,pitch:-6});}
+function releaseStoryAudio(a){if(!a)return;if(a.dispose){a._goldStop?.();a.dispose();return;}a._goldStop?.();a.onended=a.onerror=null;a.pause();a.removeAttribute('src');a.load();}
 async function storySpeechTimeline(clip){
+ if(clip.native)return null;
  const cache=storySpeechTimeline.cache||(storySpeechTimeline.cache=new Map());if(cache.has(clip.key||clip.src))return cache.get(clip.key||clip.src);
  const pending=(async()=>{try{const bytes=await readGameAudioBytes(clip.src),C=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!C)return null;const buffer=await new C(1,1,22050).decodeAudioData(bytes),d=buffer.getChannelData(0),hop=Math.max(1,Math.floor(buffer.sampleRate*.025)),rms=[];let peak=0;for(let i=0;i<d.length;i+=hop){let sum=0,n=Math.min(hop,d.length-i);for(let j=0;j<n;j++)sum+=d[i+j]**2;const v=Math.sqrt(sum/n);rms.push(v);peak=Math.max(peak,v);}const threshold=Math.max(.003,peak*.045),cumulative=[0];for(const v of rms)cumulative.push(cumulative.at(-1)+(v>threshold?1:0));return{cumulative,step:hop/buffer.sampleRate,total:cumulative.at(-1)};}catch{return null;}})();cache.set(clip.key||clip.src,pending);if(cache.size>12)cache.delete(cache.keys().next().value);return pending;
 }
@@ -1224,7 +1225,7 @@ function mountStoryReading(container,texts,delayMs=0){
  globalThis.stopStoryReading?.();const dialog=container.closest('dialog');container.classList.add('story-reading');container.innerHTML='<div class="narration-controls"><button type="button">暫停旁白</button><small>旁白同步 · 燙金閱讀</small></div><div class="story-reading-scroll"></div>';const button=container.querySelector('button'),scroll=container.querySelector('.story-reading-scroll'),paragraphs=texts.map(text=>{const p=document.createElement('p');p.textContent=text;scroll.appendChild(p);return p;});let index=0,a=null,timer=null,paused=false,disposed=false,watch=0;
  const cleanup=()=>{if(disposed)return;disposed=true;clearTimeout(timer);cancelAnimationFrame(watch);releaseStoryAudio(a);dialog?.removeEventListener('close',cleanup);if(globalThis.stopStoryReading===cleanup)globalThis.stopStoryReading=null;};globalThis.stopStoryReading=cleanup;dialog?.addEventListener('close',cleanup);
  function monitor(){if(!container.isConnected||dialog&&!dialog.open){cleanup();return;}watch=requestAnimationFrame(monitor);}monitor();
- function play(){if(disposed)return;if(index>=texts.length){releaseStoryAudio(a);a=null;button.textContent='重新播放';return;}const text=texts[index],clip=storyVoiceClip(text);if(!clip){button.textContent='此段旁白暫不可用';return;}releaseStoryAudio(a);a=new Audio(clip.src);a.volume=.8;bindStoryGold(a,clip,text,paragraphs[index],scroll);a.onended=()=>{paragraphs[index].querySelectorAll('span').forEach(s=>s.classList.add('spoken-gold'));index++;play();};a.onerror=()=>{button.textContent='重試旁白';paused=true;};if(!paused)a.play().catch(()=>{if(!disposed){paused=true;button.textContent='播放旁白';}});}
+ function play(){if(disposed)return;if(index>=texts.length){releaseStoryAudio(a);a=null;button.textContent='重新播放';return;}const text=texts[index],clip=storyVoiceClip(text);if(!clip){button.textContent='此段旁白暫不可用';return;}releaseStoryAudio(a);a=speechClipAudio(clip);a.volume=.8;bindStoryGold(a,clip,text,paragraphs[index],scroll);a.onended=()=>{paragraphs[index].querySelectorAll('span').forEach(s=>s.classList.add('spoken-gold'));index++;play();};a.onerror=()=>{button.textContent='重試旁白';paused=true;};if(!paused)a.play().catch(()=>{if(!disposed){paused=true;button.textContent='播放旁白';}});}
  button.onclick=()=>{if(index>=texts.length){index=0;paragraphs.forEach(p=>p.querySelectorAll('span').forEach(s=>s.classList.remove('spoken-gold')));scroll.scrollTop=0;paused=false;button.textContent='暫停旁白';play();return;}paused=!paused;button.textContent=paused?'繼續旁白':'暫停旁白';if(paused)a?.pause();else if(a)a.play().catch(()=>{paused=true;button.textContent='播放旁白';});else{clearTimeout(timer);play();}};
  timer=setTimeout(play,delayMs);return cleanup;
 }
@@ -1345,10 +1346,10 @@ function summonLimited(count){if(battle||state.mode!=='campaign'||![1,11].includ
 
 /* Gold ultimates match both stable card identity and the real skill name. */
 let catalogPreviewAudio=null,catalogPreviewTimer=null;
-function catalogVoiceRecord(c){return globalThis.OLYMPUS_CARD_VOICES?.[c.id]||globalThis.OLYMPUS_GOLD_ULTIMATES?.[c.id]||null;}
+function catalogVoiceRecord(c){if(c.rarity===4&&c.skill)return goldSkillRecord(c,c.skill.name);return globalThis.OLYMPUS_CARD_VOICES?.[c.id]||globalThis.OLYMPUS_GOLD_ULTIMATES?.[c.id]||null;}
 function catalogPreviewPanel(c){const voice=catalogVoiceRecord(c);return '<section class="catalog-preview-panel"><h3>角色預覽</h3><div class="catalog-preview-actions">'+(voice?'<button data-action="voicePreview" data-id="'+c.id+'">♫ 語音試聽</button><button class="small ghost" data-action="stopVoicePreview">停止語音</button>':'')+(c.skill?'<button data-action="skillPreview" data-id="'+c.id+'">✦ 技能預覽</button>':'')+'</div><p class="meta" data-voice-status="'+c.id+'" aria-live="polite">'+(voice?'試聽 '+esc(c.name)+' 的專屬台詞。':c.skill?'預覽目前卡色的技能演出。':'本卡僅有普通攻擊，沒有奧義或專屬語音。')+'</p></section>';}
 function stopCatalogVoice(){clearTimeout(catalogPreviewTimer);catalogPreviewTimer=null;releaseStoryAudio(catalogPreviewAudio);catalogPreviewAudio=null;globalThis.catalogVoiceActive=false;globalThis.olympusScore?.sync();document.querySelectorAll('[data-voice-status]').forEach(el=>{if(el.dataset.playing){delete el.dataset.playing;el.textContent='語音已停止，可重新試聽。';}});}
-function playCatalogVoice(id){if(busy||battle)return;const c=CARD[id],clip=c&&catalogVoiceRecord(c);if(!clip)return;stopCatalogVoice();let prefs={volume:.45,muted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-combat-audio')||'{}'));}catch{}const statuses=()=>document.querySelectorAll('[data-voice-status="'+id+'"]');const status=text=>statuses().forEach(el=>{el.textContent=text;el.dataset.playing='true';});if(prefs.muted||Number(prefs.volume)<=0){statuses().forEach(el=>el.textContent='目前音效已靜音，請至設定開啟音效後試聽。');return;}const a=catalogPreviewAudio=new Audio(clip.src);a.volume=Math.min(1,Number(prefs.volume)*1.25);a.preload='auto';status('正在載入語音…');globalThis.catalogVoiceActive=true;globalThis.olympusScore?.sync();const finish=text=>{if(catalogPreviewAudio!==a)return;stopCatalogVoice();statuses().forEach(el=>el.textContent=text);};a.onplaying=()=>{clearTimeout(catalogPreviewTimer);status(clip.text||[clip.whisper,clip.roar].filter(Boolean).join(' '));};a.onended=()=>finish('試聽完畢，可再次播放。');a.onerror=()=>finish('語音載入失敗，請再試一次。');catalogPreviewTimer=setTimeout(()=>finish('語音載入逾時，請再試一次。'),15000);a.play().catch(()=>finish('未能播放語音，請再次點擊試聽。'));}
+function playCatalogVoice(id){if(busy||battle)return;const c=CARD[id],clip=c&&catalogVoiceRecord(c);if(!clip)return;stopCatalogVoice();let prefs={volume:.45,muted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-combat-audio')||'{}'));}catch{}const statuses=()=>document.querySelectorAll('[data-voice-status="'+id+'"]');const status=text=>statuses().forEach(el=>{el.textContent=text;el.dataset.playing='true';});if(prefs.muted||Number(prefs.volume)<=0){statuses().forEach(el=>el.textContent='目前音效已靜音，請至設定開啟音效後試聽。');return;}const a=catalogPreviewAudio=speechClipAudio(clip);a.volume=Math.min(1,Number(prefs.volume)*1.25);a.preload='auto';status('正在載入語音…');globalThis.catalogVoiceActive=true;globalThis.olympusScore?.sync();const finish=text=>{if(catalogPreviewAudio!==a)return;stopCatalogVoice();statuses().forEach(el=>el.textContent=text);};a.onplaying=()=>{clearTimeout(catalogPreviewTimer);status(clip.text||[clip.whisper,clip.roar].filter(Boolean).join(' '));};a.onended=()=>finish('試聽完畢，可再次播放。');a.onerror=()=>finish('語音載入失敗，請再試一次。');catalogPreviewTimer=setTimeout(()=>finish('語音載入逾時，請再試一次。'),15000);a.play().catch(()=>finish('未能播放語音，請再次點擊試聽。'));}
 async function previewCatalogSkill(id){
  const c=CARD[id];if(!c?.skill||busy||battle)return;stopCatalogVoice();
  const host=document.getElementById('stageOverlay'),parent=host.parentNode,next=host.nextSibling,oldStyle=host.getAttribute('style');
@@ -1361,10 +1362,49 @@ async function previewCatalogSkill(id){
 }
 document.getElementById('detail').addEventListener('close',()=>stopCatalogVoice());
 window.addEventListener('pagehide',()=>stopCatalogVoice());
+// Native browser speech: no API keys, remote generation calls or audio downloads.
+const BrowserSpeech=(()=>{
+ const synth=globalThis.speechSynthesis;let voices=[],active=null;
+ const refresh=()=>{voices=synth?.getVoices()||[];};refresh();synth?.addEventListener('voiceschanged',refresh);
+ function choose(c){refresh();const tw=voices.filter(v=>/^(zh|cmn)[-_]TW$/i.test(v.lang)),zh=voices.filter(v=>/^(zh|cmn)(-|_|$)/i.test(v.lang));const pool=tw.length?tw:zh;const female=c.gender==='female'||c.voiceType==='female';const hint=female?/female|曉|晓|hsiao|hanhan|美嘉|meijia|yating/i:/yunjhe|雲哲|云哲|zhiwei|志偉|male\b/i;return [...pool].sort((a,b)=>(Number(hint.test(b.name)&&!( !female&&/female/i.test(b.name)))*4+Number(b.localService))-(Number(hint.test(a.name)&&!(!female&&/female/i.test(a.name)))*4+Number(a.localService)))[0];}
+ function clip(text,character={}){return {native:true,text,character,src:'speech:'+text,duration:Math.max(1.5,text.length/3.5)};}
+ function audio(record){
+  const a=new EventTarget();let utterance=null,elapsed=0,started=0,watch=null,deadline=null,disposed=false;
+  Object.assign(a,{volume:1,ended:false,paused:true,duration:record.duration||3,preload:'auto'});
+  Object.defineProperty(a,'currentTime',{get:()=>elapsed+(started?(performance.now()-started)/1000:0),set:v=>{elapsed=v;started=0;}});
+  const emit=name=>{a['on'+name]?.();a.dispatchEvent(new Event(name));};
+  const clean=()=>{clearTimeout(watch);clearTimeout(deadline);if(utterance)utterance.onstart=utterance.onend=utterance.onerror=null;};
+  a.dispose=()=>{disposed=true;clean();if(active===a){synth?.cancel();active=null;}started=0;utterance=null;};
+  a.pause=()=>{if(started)elapsed=a.currentTime;started=0;a.paused=true;if(active===a)synth?.pause();};
+  a.removeAttribute=()=>a.dispose();a.load=()=>{};
+  a.play=()=>{
+   if(disposed||!synth||!globalThis.SpeechSynthesisUtterance)return Promise.reject(Error('此瀏覽器未提供語音合成'));
+   if(active===a&&utterance&&a.paused){a.paused=false;started=performance.now();synth.resume();return Promise.resolve();}
+   active?.dispose();active=a;a.paused=false;a.ended=false;
+   const c=record.character||{},u=utterance=new SpeechSynthesisUtterance(record.text.replaceAll('・','，'));u.lang='zh-TW';const v=choose(c);if(v)u.voice=v;
+   u.rate=Math.max(.72,Math.min(1.05,1+Number(c.rate??-12)/100));u.pitch=Math.max(.65,Math.min(1.2,1+Number(c.pitch??-5)/100));u.volume=Math.max(0,Math.min(1,a.volume));
+   return new Promise((resolve,reject)=>{
+    watch=setTimeout(()=>{a.dispose();reject(Error('語音啟動逾時，請點擊試聽啟用'));emit('error');},5000);
+    u.onstart=()=>{clearTimeout(watch);started=performance.now();emit('playing');resolve();};
+    u.onend=()=>{elapsed=a.currentTime;started=0;a.ended=true;a.paused=true;clean();if(active===a)active=null;utterance=null;emit('ended');};
+    u.onerror=()=>{clean();started=0;if(active===a)active=null;utterance=null;reject(Error('語音無法播放'));emit('error');};
+    deadline=setTimeout(()=>{a.dispose();emit('error');},Math.max(20000,record.text.length*1000));
+    synth.cancel();synth.resume();synth.speak(u);
+   });
+  };return a;
+ }
+ function status(){refresh();if(!synth)return '此瀏覽器不支援語音合成';return voices.some(v=>/^(zh|cmn)[-_]TW$/i.test(v.lang))?'已找到台灣中文人聲':'未找到台灣中文人聲，將使用可用中文聲音或系統 zh-TW 預設';}
+ const stop=()=>active?.dispose();addEventListener('pagehide',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+ return {clip,audio,stop,status};
+})();
+function speechClipAudio(clip){return clip.native?BrowserSpeech.audio(clip):new Audio(clip.src);}
+
+const BROWSER_VOICE_PROFILES={"O001":{"gender":"male","age":"elder","form":"神祇","rate":-14,"pitch":-9},"O002":{"gender":"male","age":"elder","form":"神祇","rate":-17,"pitch":-9},"O003":{"gender":"male","age":"elder","form":"神祇","rate":-20,"pitch":-12},"O004":{"gender":"female","age":"adult","form":"神祇","rate":-12,"pitch":-4},"O005":{"gender":"male","age":"adult","form":"神祇","rate":-9,"pitch":-4},"O006":{"gender":"male","age":"young-adult","form":"神祇","rate":-7,"pitch":-1},"O007":{"gender":"female","age":"young-adult","form":"神祇","rate":-7,"pitch":-1},"O008":{"gender":"female","age":"adult","form":"神祇","rate":-9,"pitch":-4},"O009":{"gender":"female","age":"adult","form":"神祇","rate":-12,"pitch":-4},"O010":{"gender":"male","age":"young-adult","form":"神祇","rate":-7,"pitch":-1},"O011":{"gender":"male","age":"adult","form":"神祇","rate":-9,"pitch":-4},"O012":{"gender":"female","age":"adult","form":"神祇","rate":-12,"pitch":-4},"O013":{"gender":"male","age":"adult","form":"神祇","rate":-12,"pitch":-4},"O014":{"gender":"female","age":"adult","form":"神祇","rate":-9,"pitch":-4},"O015":{"gender":"female","age":"adult","form":"神祇","rate":-15,"pitch":-7},"O016":{"gender":"female","age":"adult","form":"神祇","rate":-15,"pitch":-7},"O017":{"gender":"male","age":"adult","form":"神祇","rate":-9,"pitch":-4},"O018":{"gender":"female","age":"adult","form":"神祇","rate":-12,"pitch":-4},"O019":{"gender":"female","age":"young-adult","form":"神祇","rate":-7,"pitch":-1},"O020":{"gender":"male","age":"elder","form":"神祇","rate":-17,"pitch":-9},"O021":{"gender":"female","age":"elder","form":"神祇","rate":-17,"pitch":-9},"O022":{"gender":"female","age":"elder","form":"神祇","rate":-17,"pitch":-9},"O023":{"gender":"male","age":"elder","form":"神祇","rate":-17,"pitch":-9},"O024":{"gender":"female","age":"elder","form":"神祇","rate":-20,"pitch":-12},"O025":{"gender":"male","age":"elder","form":"monster","rate":-22,"pitch":-16},"O026":{"gender":"male","age":"adult","form":"神祇","rate":-12,"pitch":-4},"O027":{"gender":"male","age":"adult","form":"神祇","rate":-9,"pitch":-4},"O028":{"gender":"male","age":"elder","form":"神祇","rate":-17,"pitch":-9},"O029":{"gender":"male","age":"adult","form":"神祇","rate":-15,"pitch":-7},"O030":{"gender":"male","age":"adult","form":"神祇","rate":-12,"pitch":-4},"L020":{"gender":"male","age":"adult","form":"限定守護者","rate":-15,"pitch":-7},"L021":{"gender":"male","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"L022":{"gender":"male","age":"adult","form":"限定守護者","rate":-9,"pitch":-4},"L023":{"gender":"female","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"L024":{"gender":"female","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"L025":{"gender":"male","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"L026":{"gender":"female","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"L027":{"gender":"male","age":"adult","form":"限定守護者","rate":-9,"pitch":-4},"L028":{"gender":"male","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"L029":{"gender":"male","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"L030":{"gender":"male","age":"adult","form":"限定守護者","rate":-12,"pitch":-4},"H001":{"gender":"male","age":"21","form":"逆命族","rate":-7,"pitch":-1}};
+
 let goldCinematic=null,goldImpactDuration=0;
 const goldVoiceCache=new Map();
-function goldSkillRecord(actor,name){const row=globalThis.OLYMPUS_GOLD_ULTIMATES?.[actor?.id];return actor?.rarity===4&&row?.skill===name?row:null;}
-function warmGoldVoices(){if(!battle)return;for(const u of battle.units.filter(u=>u.active)){const row=goldSkillRecord(u,u.skill?.name);if(!row||goldVoiceCache.has(row.src))continue;const a=new Audio(row.src);a.preload='auto';a.load();goldVoiceCache.set(row.src,a);}while(goldVoiceCache.size>18){const [key,a]=goldVoiceCache.entries().next().value;releaseStoryAudio(a);goldVoiceCache.delete(key);}}
+function goldSkillRecord(actor,name){if(actor?.rarity!==4||!name)return null;return {...BrowserSpeech.clip(name,{...BROWSER_VOICE_PROFILES[actor.id],...actor,rate:BROWSER_VOICE_PROFILES[actor.id]?.rate??-12,pitch:BROWSER_VOICE_PROFILES[actor.id]?.pitch??-5}),skill:name,textMode:'skill-name-only',burstAt:.35,whisper:'',roar:name};}
+function warmGoldVoices(){ /* Browser voices are loaded by voiceschanged. */ }
 function stopGoldCinematic(){const fx=goldCinematic;goldCinematic=null;goldImpactDuration=0;if(fx){clearInterval(fx.timer);releaseStoryAudio(fx.audio);fx.finish(false);fx.root.remove();}globalThis.goldVoiceActive=false;globalThis.olympusScore?.sync();}
 function playGoldUltimate(actor,row,epoch){
  stopGoldCinematic();
@@ -1372,8 +1412,8 @@ function playGoldUltimate(actor,row,epoch){
  const quiet=document.documentElement.classList.contains('quiet-motion')||matchMedia('(prefers-reduced-motion:reduce)').matches;
  const style={雷:['gold-ult-elements',0],水:['gold-ult-elements',1],火:['gold-ult-elements',2],地:['gold-ult-elements',3],光:['gold-ult-mystic',0],冥:['gold-ult-mystic',1],冰:['gold-ult-mystic',2],風:['gold-ult-mystic',3]}[actor.element]||['gold-ult-mystic',0];
  const role=actor.skill.power>0?'strike':actor.skill.effects?.some(e=>e.type==='shield')?'ward':'blessing';
- host.innerHTML='<section class="gold-ultimate '+role+(quiet?' reduced':'')+'" style="--gold-art:var(--art-'+style[0]+');--gold-x:'+(style[1]%2*100)+'%;--gold-y:'+Math.floor(style[1]/2)*100+'%;--gold-color:'+ELEMENT_COLORS[actor.element]+'"><div class="gold-ultimate-art"></div><div class="gold-ultimate-rays"></div><div class="gold-ultimate-rune">'+esc(EICON[actor.element])+'</div><div class="gold-ultimate-portrait">'+avatar(actor,'gold-portrait')+'</div><div class="gold-ultimate-copy"><small>'+esc(actor.name)+' · 神權覺醒</small><h2>'+esc(row.skill)+'</h2><p>'+esc(row.whisper)+'</p></div><div class="gold-ultimate-ring"></div><div class="gold-ultimate-particles">'+Array.from({length:quiet?0:24},(_,i)=>'<i style="--i:'+i+'"></i>').join('')+'</div></section>';
- const root=host.firstElementChild,audio=goldVoiceCache.get(row.src)||new Audio(row.src);goldVoiceCache.delete(row.src);
+ host.innerHTML='<section class="gold-ultimate '+role+(quiet?' reduced':'')+'" style="--gold-art:var(--art-'+style[0]+');--gold-x:'+(style[1]%2*100)+'%;--gold-y:'+Math.floor(style[1]/2)*100+'%;--gold-color:'+ELEMENT_COLORS[actor.element]+'"><div class="gold-ultimate-art"></div><div class="gold-ultimate-rays"></div><div class="gold-ultimate-rune">'+esc(EICON[actor.element])+'</div><div class="gold-ultimate-portrait">'+avatar(actor,'gold-portrait')+'</div><div class="gold-ultimate-copy"><small>'+esc(actor.name)+' · 神權覺醒</small><h2>'+esc(row.skill)+'</h2><p>'+esc(row.textMode==='skill-name-only'?'':row.whisper)+'</p></div><div class="gold-ultimate-ring"></div><div class="gold-ultimate-particles">'+Array.from({length:quiet?0:24},(_,i)=>'<i style="--i:'+i+'"></i>').join('')+'</div></section>';
+ const root=host.firstElementChild,audio=speechClipAudio(row);goldVoiceCache.delete(row.src);
  let prefs={volume:.45,muted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-combat-audio')||'{}'));}catch{}
  audio.volume=Math.max(0,Math.min(1,(Number(prefs.volume)||0)*1.25));audio.preload='auto';
  globalThis.goldVoiceActive=!prefs.muted;globalThis.olympusScore?.sync();
@@ -1381,7 +1421,7 @@ function playGoldUltimate(actor,row,epoch){
   let settled=false,burst=false,fallback=!!prefs.muted,started=performance.now(),lastTime=0,lastProgress=started,virtualStart=started;
   const finish=value=>{if(settled)return;settled=true;resolve(value);};
   const fx=goldCinematic={root,audio,finish,timer:null};
-  function erupt(){if(burst)return;burst=true;root.classList.add('erupt');root.querySelector('p').textContent=row.roar;goldImpactDuration=Math.max(900,Math.min(7500,(row.duration-row.burstAt)*1000+250));CombatAudio.sound(actor,'impact',true,[{kind:actor.skill.power>0?'damage':'buff'}]);finish(true);}
+  function erupt(){if(burst)return;burst=true;root.classList.add('erupt');root.querySelector('p').textContent=row.textMode==='skill-name-only'?'':row.roar;goldImpactDuration=row.native?900:Math.max(900,Math.min(7500,(row.duration-row.burstAt)*1000+250));CombatAudio.sound(actor,'impact',true,[{kind:actor.skill.power>0?'damage':'buff'}]);finish(true);}
   function useFallback(){if(fallback)return;fallback=true;virtualStart=performance.now()-Math.min(audio.currentTime,row.burstAt)*1000;audio.pause();globalThis.goldVoiceActive=false;globalThis.olympusScore?.sync();}
   audio.onerror=useFallback;
   if(!fallback)audio.play().catch(useFallback);
@@ -1391,7 +1431,7 @@ function playGoldUltimate(actor,row,epoch){
    const now=performance.now();
    if(!fallback){if(audio.currentTime>lastTime+.01){lastTime=audio.currentTime;lastProgress=now;}else if(now-lastProgress>2200)useFallback();}
    const t=fallback?(now-virtualStart)/1000:audio.currentTime;
-   if(!burst&&t>=row.burstAt)erupt();
+   if(!burst&&(row.native?(audio.ended||(fallback&&t>=row.duration)):t>=row.burstAt))erupt();
    if(!burst&&audio.ended)erupt();
   },25);
  });
@@ -1528,3 +1568,6 @@ function openBattleSection(uid,key){const u=battle?.units.find(x=>x.uid===uid),s
  try{mediaCache=await caches.open('olympus-media-v1');const keys=new Set((await mediaCache.keys()).map(r=>r.url));for(const item of manifest.assets){if(keys.has(new URL(item.path+'?rev='+item.hash,location.href).href))done.add(item.path);}cachedCount=done.size;status.textContent='已找到 '+cachedCount+' 個快取素材';draw('正在比對素材版本…');}catch{cacheWriteFailed=true;}
  await run();}catch{status.textContent='目前無法取得素材清單，可重試或先進入遊戲。';retry.hidden=false;}})();
 })();
+
+function browserVoiceControls(){return '<h3>台灣人聲試聽</h3><p>'+esc(BrowserSpeech.status())+'</p><div class="catalog-preview-actions">'+['O001','O002','O003','O004','O005'].map(id=>'<button data-browser-sample="'+id+'">'+esc(CARD[id].name)+' · '+esc(CARD[id].skill.name)+'</button>').join('')+'<button data-browser-stop>停止試聽</button></div><p data-browser-status role="status">只念技能名稱；聲線依裝置而異。</p>';}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-browser-sample],[data-browser-stop]');if(!b)return;const status=b.closest('dialog')?.querySelector('[data-browser-status]');if(b.hasAttribute('data-browser-stop')){BrowserSpeech.stop();if(status)status.textContent='已停止';return;}if(battle){if(status)status.textContent='請先結束戰鬥再試聽，避免打斷戰鬥配音。';return;}const c=CARD[b.dataset.browserSample],a=speechClipAudio(goldSkillRecord(c,c.skill.name));let prefs={volume:.45,muted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-combat-audio')||'{}'));}catch{}if(prefs.muted){if(status)status.textContent='請先解除音效靜音';return;}a.volume=Number(prefs.volume);if(status)status.textContent=c.name+'：'+c.skill.name;a.onended=()=>{if(status)status.textContent='試聽完畢';};a.onerror=()=>{if(status)status.textContent='無法播放，請確認系統已安裝中文語音';};b.closest('dialog')?.addEventListener('close',()=>a.dispose(),{once:true});a.play().catch(()=>a.onerror?.());});
