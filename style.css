@@ -1075,3 +1075,4 @@ html body .camp-story-slides:not(:has(.camp-current)) i:first-child{opacity:1!im
  html body .battle-shell .center-band>p{grid-column:3;justify-self:end;text-align:right;margin:0;max-width:100%}
  .battle-controls>.command-autoplay{min-width:80px}.battle-controls>.row{flex-basis:100%}
 }
+@media(min-width:901px),(orientation:landscape){.battle-shell .battle-sidebar{grid-template-rows:auto minmax(120px,1fr)}}
