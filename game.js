@@ -395,7 +395,7 @@ const copy=host.querySelector('.stage-copy');void scrollBannerMotion(copy,false)
 function canOpenBattleReplay(){return !busy&&(!battle||battle.done)&&!!battleRecording?.frames?.at(-1)?.done;}
 function updatePlaybackControls(){document.querySelectorAll('[data-action="battleReplay"]').forEach(b=>b.disabled=!canOpenBattleReplay());let btn=document.querySelector('[data-action="play"]');if(btn){btn.textContent=playing?'暫停':busy?'演出後繼續':'自動戰鬥';btn.setAttribute('aria-pressed',String(playing));}let stepBtn=document.querySelector('[data-action="step"]');if(stepBtn)stepBtn.disabled=playing||busy||!!battle?.done;const leaveBtn=document.querySelector('[data-action="leave"]');if(leaveBtn){leaveBtn.disabled=playing||busy;leaveBtn.textContent=playing?(mobilePortraitLayout()?'撤退':'自動戰鬥時無法撤退'):battle?.done?'返回營地':'撤退';}}
 function scheduleNextAction(){if(fastBattleRequested&&!busy){void finishFastBattle();return;}if(!playing||busy||!battle||battle.done||timer!==null)return;timer=setTimeout(()=>{timer=null;void presentNextAction();},delay===180?100:delay===1000?450:220);}
-async function startEntrance(){warmGoldVoices();const epoch=presentationEpoch;busy=true;entryUids=battle.units.filter(u=>u.active).map(u=>u.uid);fxDuration=motionDuration('entry');render();const valid=await showStage('entry','雙方列陣','戰鼓將起 · 諸神與凡人',epoch);if(!valid)return;entryUids=[];busy=false;render();scheduleNextAction();}
+async function startEntrance(){warmGoldVoices();const epoch=presentationEpoch;busy=true;entryUids=battle.units.filter(u=>u.active).map(u=>u.uid);fxDuration=motionDuration('entry');render();const valid=await showStage('entry','雙方列陣','戰鼓將起 · 諸神與凡人',epoch);if(!valid)return;entryUids=[];if(!await battleStartCountdown(epoch))return;busy=false;if(autoBattlePreference()){pauseAtRound=false;playing=true;globalThis.mobileManualBattle=false;}render();scheduleNextAction();}
 async function presentNextAction(){if(busy||!battle||battle.done)return false;const epoch=presentationEpoch;busy=true;updatePlaybackControls();
 try{
 const projected=JSON.parse(JSON.stringify({...battle,events:[],impactUnits:null}));projected.autoPriority=playing;nextAction(projected);const events=projected.events||[];const round=events.find(e=>e.kind==='round');
@@ -527,7 +527,8 @@ if(a==='beginBattle'){stopNodeStory();document.getElementById('detail').close();
 if(a==='reviewStory'){showPrologue(false);return;}
 if(a==='play'){play();return;}
 if(a==='step'){step();return;}
-if(a==='manualBattle'){if(!battle||battle.done)return;const wasManual=globalThis.mobileManualBattle===true;pause();globalThis.mobileManualBattle=true;if(!busy){render();if(wasManual)step();}return;}
+if(a==='manualBattle'){if(!battle||battle.done)return;setAutoBattlePreference(false);const wasManual=globalThis.mobileManualBattle===true;pause();globalThis.mobileManualBattle=true;if(!busy){render();if(wasManual)step();}return;}
+if(a==='battleSection'){openBattleSection(id,btn.dataset.section);return;}
 if(a==='battleCardInfo'){openBattleCardInfo(id||battleSelected);return;}
 if(a==='unit'){battleSelected=id;if(mobilePortraitLayout()){updateMobileCardDock();openBattleCardInfo(id);return;}if(busy){let box=document.querySelector('.battle-inspector');let unit=battle.units.find(u=>u.uid===id);if(box)box.innerHTML=detail(unit,unit);}else render();if(window.innerWidth<=800)document.querySelector('.battle-sidebar')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
 if(a==='battlePolicy'){if(busy)return;let u=battle.units.find(x=>x.uid===id);if(u?.side===0&&u.skill&&u.hp>0){u.auto=!u.auto;render();}return;}
@@ -1447,7 +1448,7 @@ function openBattleCardInfo(uid){
  const u=battle?.units.find(x=>x.uid===uid);if(!u)return;
  let d=document.getElementById('battle-card-info');if(!d){d=document.createElement('dialog');d.id='battle-card-info';d.className='battle-card-info-dialog';document.body.append(d);d.addEventListener('click',e=>{if(e.target.closest('[data-battle-info-close]'))d.close();});}
  // Snapshot once; this dialog is outside #app and never reconciled by battle renders.
- const snapshot=structuredClone(u),fragment=document.createElement('template');fragment.innerHTML=detail(snapshot,snapshot);
+ const snapshot=structuredClone(u),fragment=document.createElement('template');fragment.innerHTML=battleFullDetail(snapshot,snapshot);
  fragment.content.querySelectorAll('button').forEach(btn=>{if(btn.classList.contains('portrait-zoom')){const div=document.createElement('div');div.className=btn.className;div.append(...btn.childNodes);btn.replaceWith(div);}else btn.remove();});
  d.setAttribute('aria-labelledby','battle-card-info-title');d.innerHTML='<header class="profile-modal-head"><h2 id="battle-card-info-title">角色情報</h2><button data-battle-info-close autofocus>關閉 ✕</button></header><p class="meta">點選當下的能力資料；自動戰鬥會持續進行。</p>';
  d.append(fragment.content);if(!d.open)d.showModal();
@@ -1459,3 +1460,32 @@ function openBattleCardInfo(uid){
  };
  const paint=paintBattleApp;paintBattleApp=function(markup){paint(markup);const slides=[...document.querySelectorAll('.camp-story-slides i')];slides.forEach((el,i)=>el.classList.toggle('camp-current',i===(globalThis.campSlideIndex||0)));};
 })();
+
+// Only explicit player mode changes update this preference; end-of-battle pauses do not.
+function autoBattlePreference(){try{return localStorage.getItem('olympus-auto-battle')==='true';}catch{return !!globalThis.savedAutoBattle;}}
+function setAutoBattlePreference(value){globalThis.savedAutoBattle=value;try{localStorage.setItem('olympus-auto-battle',String(value));}catch{}}
+const explicitBattlePlay=play;play=function(){if(!battle||battle.done)return;setAutoBattlePreference(!playing);if(!playing)pauseAtRound=false;else globalThis.mobileManualBattle=true;return explicitBattlePlay();};
+async function battleStartCountdown(epoch){
+ const session=battle,overlay=document.createElement('div');overlay.className='battle-start-countdown';overlay.setAttribute('role','status');overlay.setAttribute('aria-live','polite');document.body.append(overlay);
+ const board=document.querySelector('.battle-board'),rect=board?.getBoundingClientRect();if(rect){overlay.style.left=(rect.left+rect.width/2)+'px';overlay.style.top=(Math.max(0,rect.top)+Math.min(rect.height,innerHeight-Math.max(0,rect.top))/2)+'px';}
+ try{for(const n of [3,2,1]){if(epoch!==presentationEpoch||battle!==session)return false;overlay.innerHTML='<div class="countdown-pulse"><span>開始戰鬥</span><strong>0'+n+'</strong></div>';await new Promise(resolve=>setTimeout(resolve,1000));}return epoch===presentationEpoch&&battle===session;}finally{overlay.remove();}
+}
+const battleFullDetail=detail;
+detail=function(c,live=null){const html=battleFullDetail(c,live);if(!live)return html;const t=document.createElement('template');t.innerHTML=html;const root=t.content.querySelector('.detail-inner');if(!root)return html;
+ const specs=[['ability','.ability-section',c.skill?'奧義技能':'普通攻擊'],['lore','.lore-section','特性與背景'],['bonds','.bond-panel','羈絆']];
+ for(const [,selector]of specs)root.querySelector(selector)?.remove();
+ const menu=document.createElement('div');menu.className='battle-detail-buttons';menu.innerHTML=specs.map(([key,,label])=>'<button data-action="battleSection" data-id="'+live.uid+'" data-section="'+key+'">'+label+' ›</button>').join('');root.append(menu);return root.outerHTML;
+};
+function openBattleSection(uid,key){const u=battle?.units.find(x=>x.uid===uid),selectors={ability:'.ability-section',lore:'.lore-section',bonds:'.bond-panel'},labels={ability:'技能與攻擊',lore:'特性與背景',bonds:'羈絆'};if(!u||!selectors[key])return;
+ openBattleCardInfo(uid);const d=document.getElementById('battle-card-info'),t=document.createElement('template');t.innerHTML=battleFullDetail(structuredClone(u),structuredClone(u));const section=t.content.querySelector(selectors[key]);
+ d.querySelector('#battle-card-info-title').textContent=u.name+' · '+labels[key];d.querySelector('.detail-inner')?.remove();if(section){section.querySelectorAll('button').forEach(b=>b.remove());d.append(section);}else{const p=document.createElement('p');p.textContent='此角色目前沒有羈絆效果。';d.append(p);}
+}
+(function(){const base=battleView;battleView=function(){const t=document.createElement('template');t.innerHTML=base();const f=t.content;
+ f.querySelector('.battle-record')?.remove();f.querySelector('.round-pause')?.remove();
+ if(!mobilePortraitLayout()){
+  const step=f.querySelector('[data-action="step"]'),auto=f.querySelector('[data-action="play"]');if(step&&auto)step.replaceWith(auto);
+  const direct=f.querySelector('.direct-command'),note=direct?.querySelector('span'),head=f.querySelector('.battle-board>.board-head>.meta');if(head&&note){head.textContent=note.textContent;head.classList.add('battle-command-hint');}
+  const actions=direct?.querySelector('.row');if(actions)f.querySelector('.battle-controls')?.append(actions);direct?.remove();
+ }
+ const box=document.createElement('div');box.append(f);return box.innerHTML;
+};})();
