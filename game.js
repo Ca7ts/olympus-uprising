@@ -210,8 +210,9 @@ function heroRankFactor(rank){let factor=1;const rates=[0,.05,.04,.03];for(let r
 const STATUS={shield:'護盾',guard:'減傷',weak:'虛弱',boost:'強化',vuln:'易傷',haste:'迅捷',silence:'沉默',stun:'昏迷',burn:'灼傷',regen:'再生',taunt:'嘲諷'};
 function advantage(a,b){if(a===b)return 1;let i=ELEMENTS.indexOf(a),j=ELEMENTS.indexOf(b);if(i<0||j<0)return 1;return (i+1)%8===j?1.3:(j+1)%8===i?.7:1;}
 function terrainFactor(c,t){return t.up.includes(c.element)?1.15:t.down.includes(c.element)?.85:1;}
+let battleMusicSerial=0;
 function createBattle(formation,enemy,terrain,scale=1,enemyScale=1,policies={}){
-let b={round:0,queue:[],units:[],terrain:TERRAINS[terrain],log:[],done:false,winner:null,last:null,events:[],impactUnits:null};
+let b={musicSession:++battleMusicSerial,round:0,queue:[],units:[],terrain:TERRAINS[terrain],log:[],done:false,winner:null,last:null,events:[],impactUnits:null};
 [formation,enemy].forEach((ids,side)=>ids.forEach((id,slot)=>{if(!CARD[id])return;let c=CARD[id],s=side?enemyScale:scale;b.units.push({...c,growthScale:s,uid:side+'-'+slot,side,slot,origin:slot,active:slot<6,hp:Math.round(c.hp*s),max:Math.round(c.hp*s),atk:Math.round(c.atk*s),def:Math.round(c.def*s),qi:0,shield:0,status:[],auto:side?true:policies[id]!==false,entered:false});}));
 for(let side=0;side<2;side++){let v=Math.max(0,...b.units.filter(u=>u.side===side&&u.active&&u.passive?.type==='teamhp').map(u=>u.passive.value));for(let u of b.units.filter(u=>u.side===side)){u.teamHpAura=v;u.teamHpSources=b.units.filter(x=>x.side===side&&x.active&&x.passive?.type==='teamhp'&&x.passive.value===v).map(x=>x.name);u.max=Math.round(u.max*(1+v));u.hp=u.max;}}
 b.units.filter(u=>u.active).forEach(u=>enter(b,u));reinforce(b);b.log.push('戰鬥開始：'+b.terrain.name+'。雙方從 0 氣開始。');return b;}
@@ -1112,13 +1113,13 @@ function iceShatter(layer,x,y,duration,quiet){for(let i=0;i<(quiet?6:22);i++){co
 const BATTLE_MUSIC_INFO={temple:{title:'神殿・血誓破曉',bpm:152},forest:{title:'森林・月桂疾行',bpm:144},sea:{title:'海戰・怒潮破陣',bpm:150},land:{title:'陸戰・烈旗進軍',bpm:148},sky:{title:'雲階・雷翼突襲',bpm:154},ice:{title:'冰境・霜刃疾襲',bpm:146},night:{title:'冥夜・逆流追魂',bpm:148},gods:{title:'神臨・碎冕決戰',bpm:158}};
 function battleMusicScene(n){if(n.id===29)return 'gods';if(n.id===8||n.id===22)return 'forest';if(n.id===4||n.id===23)return 'temple';return ['land','sea','sky','temple','ice','night'][n.terrain]||'land';}
 const BattleScore=(()=>{
- const player=new Audio();player.loop=true;player.preload='auto';let key='',ownerBattle=null,playPending=false,failed=false,epoch=0;
+ const player=new Audio();player.loop=true;player.preload='auto';let key='',ownerSession=null,divineSession=null,playPending=false,failed=false,epoch=0;
  let prefs={volume:.32,muted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-score')||'{}'));}catch{}
  prefs.volume=Number.isFinite(Number(prefs.volume))?Math.max(0,Math.min(1,Number(prefs.volume))):.32;
- function stop(){epoch++;player.pause();player.removeAttribute('src');player.load();key='';ownerBattle=null;playPending=false;failed=false;}
- function choose(){if(!battle||battle.done)return null;const n=nodes[battle.nodeId];if(battle.units.some(u=>u.active&&u.hp>0&&/^O\d+$/.test(u.id)))battle._divineMusic=true;return battle._divineMusic?'gods':battleMusicScene(n);}
+ function stop(){epoch++;player.pause();player.removeAttribute('src');player.load();key='';ownerSession=null;playPending=false;failed=false;}
+ function choose(){if(!battle||battle.done)return null;const n=nodes[battle.nodeId];if(battle.units.some(u=>u.active&&u.hp>0&&/^O\d+$/.test(u.id)))divineSession=battle.musicSession;return divineSession===battle.musicSession?'gods':battleMusicScene(n);}
  function play(){if(playPending||!player.paused)return;const token=epoch;playPending=true;Promise.resolve(player.play()).catch(()=>{}).finally(()=>{if(token===epoch)playPending=false;});}
- function sync(){const wanted=choose();if(!wanted){if(key)stop();return;}const src=globalThis.OLYMPUS_BATTLE_MUSIC?.[wanted];if(!src){if(key)stop();return;}if(ownerBattle!==battle||wanted!==key){stop();ownerBattle=battle;key=wanted;player.src=src;player.loop=true;failed=false;}player.volume=prefs.volume*.7;player.muted=!!prefs.muted;if(document.hidden||prefs.muted){player.pause();return;}if(!failed)play();}
+ function sync(){const wanted=choose();if(!wanted){if(key)stop();return;}const src=globalThis.OLYMPUS_BATTLE_MUSIC?.[wanted];if(!src){if(key)stop();return;}if(ownerSession!==battle.musicSession||wanted!==key){stop();ownerSession=battle.musicSession;key=wanted;player.src=src;player.loop=true;failed=false;}player.volume=prefs.volume*.7;player.muted=!!prefs.muted;if(document.hidden||prefs.muted){player.pause();return;}if(!failed)play();}
  function unlock(){if(failed){failed=false;player.load();}sync();}
  player.addEventListener('error',()=>{failed=true;});
  function controls(){const wanted=choose();return '<label><input type="checkbox" data-score-mute '+(prefs.muted?'checked':'')+'> 靜音戰鬥配樂</label><label>戰鬥配樂音量 <input type="range" min="0" max="100" aria-label="戰鬥配樂音量" data-score-volume value="'+Math.round(prefs.volume*100)+'"><output>'+Math.round(prefs.volume*100)+'%</output></label><p class="meta">'+(wanted?'目前配樂：'+BATTLE_MUSIC_INFO[wanted].title:'八首場景專屬管弦戰鬥曲')+' · 單首播放，技能不中斷配樂。</p>'+(failed?'<p class="meta">配樂載入失敗，請確認網路後點擊畫面重試。</p>':'');}
