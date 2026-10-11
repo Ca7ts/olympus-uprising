@@ -1505,3 +1505,22 @@ function openBattleSection(uid,key){const u=battle?.units.find(x=>x.uid===uid),s
  window.addEventListener('resize',()=>document.querySelectorAll('.mobile-nav-menu:popover-open').forEach(m=>m.hidePopover()));
  render();
 })();
+
+// Asset preparation is outside combat rendering and never touches saved games.
+(function(){
+ const panel=document.createElement('section');panel.className='asset-preparation';panel.innerHTML='<h2>整備征途</h2><p data-load-status role="status">正在確認素材版本…</p><progress max="100" value="0" aria-label="素材準備進度"></progress><p data-load-detail></p><div><button data-load-skip>先進入遊戲</button><button data-load-retry hidden>重試未完成素材</button></div>';
+ const home=document.querySelector('.title-screen');if(!home)return;home.append(panel);const actions=home.querySelector('.title-actions');if(actions)actions.inert=true;
+ const status=panel.querySelector('[data-load-status]'),detail=panel.querySelector('[data-load-detail]'),bar=panel.querySelector('progress'),skip=panel.querySelector('[data-load-skip]'),retry=panel.querySelector('[data-load-retry]');
+ let released=false;function unlock(){released=true;if(actions)actions.inert=false;skip.hidden=true;}
+ skip.onclick=()=>{unlock();status.textContent='已開放操作；素材會繼續在背景準備。';};
+ if(location.protocol==='file:'){bar.value=100;status.textContent='離線版素材已隨遊戲檔案載入';detail.textContent='可開始旅程；不需要額外下載。';unlock();return;}
+ let manifest,done=new Set(),received=new Map(),running=false;
+ function draw(current){const total=manifest.assets.reduce((n,x)=>n+x.size,0),bytes=manifest.assets.reduce((n,x)=>n+(done.has(x.path)?x.size:Math.min(x.size,received.get(x.path)||0)),0);bar.value=total?bytes/total*100:100;detail.textContent=Math.floor(bar.value)+'% · '+(bytes/1048576).toFixed(1)+' / '+(total/1048576).toFixed(1)+' MB · '+done.size+' / '+manifest.assets.length+' 個素材';if(!released)status.textContent=current;}
+ async function run(){if(running)return;running=true;retry.hidden=true;const queue=manifest.assets.filter(x=>!done.has(x.path));let failures=0;
+ async function worker(){while(queue.length){const item=queue.shift();received.set(item.path,0);draw('下載／讀取快取：'+item.label);const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),45000);try{const response=await fetch(item.path+'?rev='+item.hash,{signal:abort.signal});if(!response.ok)throw Error('HTTP '+response.status);const reader=response.body?.getReader();if(reader){while(true){const chunk=await reader.read();if(chunk.done)break;received.set(item.path,(received.get(item.path)||0)+chunk.value.byteLength);draw('下載／讀取快取：'+item.label);}}else await response.arrayBuffer();done.add(item.path);}catch{failures++;received.delete(item.path);}finally{clearTimeout(timer);draw('整理素材…');}}}
+ await Promise.all([worker(),worker(),worker()]);running=false;if(!failures){bar.value=100;status.textContent='素材準備完成，可以開始旅程';unlock();}else{status.textContent='部分素材尚未完成，可重試或先進入遊戲。';retry.hidden=false;} }
+ retry.onclick=()=>{if(manifest)void run();else location.reload();};
+ (async()=>{try{const response=await fetch('asset-manifest.json',{cache:'no-store'});if(!response.ok)throw Error('manifest');manifest=await response.json();
+ if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('asset-worker.js');await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(Error('worker timeout')),8000))]);if(!navigator.serviceWorker.controller)await Promise.race([new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true})),new Promise(resolve=>setTimeout(resolve,2000))]);}catch{detail.textContent='快取暫不可用，改用一般下載。';}}
+ await run();}catch{status.textContent='目前無法取得素材清單，可重試或先進入遊戲。';retry.hidden=false;}})();
+})();
