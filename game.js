@@ -1100,7 +1100,10 @@ const CombatAudio=(()=>{
  function cry(c,dead,delay=0){const kind=cryKind(c),female=c.voiceType==='female'||/雅典娜|赫拉|阿芙洛|阿提|阿耳忒|德墨|珀耳|妮克|尼克斯|赫斯|蓋亞|塞勒|厄俄|女|寧芙/.test(c.name+' '+c.title);sample('hurt_'+(kind==='human'?(female?'female':'male'):kind),dead?.55:.4,delay);if(dead)sample('death_fall',.5,delay+.15);}
  function reactions(events,before,after){if(events.some(e=>e.kind==='revive'))sample('undying_ember_revive',.45);const ids=[...new Set(events.filter(e=>e.kind==='damage'&&e.amount>0).map(e=>e.target))],hits=ids.map(id=>{const a=before.find(u=>u.uid===id),b=after.find(u=>u.uid===id);return a&&b&&a.hp>0?{c:a,dead:b.hp<=0}:null;}).filter(Boolean).sort((a,b)=>Number(b.dead)-Number(a.dead));hits.slice(0,4).forEach((h,i)=>cry(h.c,h.dead,i*.045));}
 
- return {sound,stop,controls,reactions,hover(){unlock();sample('ui_hover_glass_pop',.22);},click(){unlock();sample('ui_hover_metal_click',.34);}};
+ const uiPlayers=Object.fromEntries(['button_hover','button_click'].map(key=>{const audio=new Audio(globalThis.OLYMPUS_SFX?.[key]||'');audio.preload='auto';audio.load();return [key,audio];}));
+ function uiSound(key,level){if(prefs.muted||document.hidden)return;const audio=uiPlayers[key];if(!audio?.getAttribute('src'))return;audio.pause();audio.currentTime=0;audio.volume=Math.max(0,Math.min(1,prefs.volume*level));audio.play().catch(()=>{});}
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)Object.values(uiPlayers).forEach(a=>a.pause());});
+ return {sound,stop,controls,reactions,hover(){uiSound('button_hover',.28);},click(){uiPlayers.button_hover.pause();uiSound('button_click',.48);}};
 })();
 
 globalThis.olympusAudio=CombatAudio;
@@ -1238,7 +1241,7 @@ function summonLimited(count){if(battle||state.mode!=='campaign'||![1,11].includ
 /* Pointer hover feedback: one sound per entry, capped during rapid traversal. */
 (()=>{
  let lastSound=0,lastClick=0;
- const selector='button:not(:disabled),.card,[role="button"]';
+ const selector='button:not(:disabled),.card,.summon-card,.replay-unit,.enemy-mini,[role="button"]';
  document.addEventListener('pointerover',e=>{
   if(e.pointerType!=='mouse'||!matchMedia('(hover:hover)').matches)return;
   const el=e.target.closest?.(selector);
