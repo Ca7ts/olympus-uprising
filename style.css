@@ -1095,3 +1095,8 @@ html body main.shell:has(>.setup-layout)>.phase-head .meta,html body .formation-
  .mobile-nav-trigger{min-width:0;min-height:46px;padding:7px 3px;font-size:14px;white-space:nowrap}
  html body .battle-shell>.nav{display:none!important}
 }
+
+/* Mobile formation already exposes the complete profile in the card dialog. */
+@media(max-width:900px){
+ html body .shell>.setup-layout>aside.selected-detail{display:none!important}
+}
