@@ -1103,3 +1103,4 @@ html body main.shell:has(>.setup-layout)>.phase-head .meta,html body .formation-
 .asset-preparation{grid-column:1/-1;align-self:end;width:100%;padding:18px 24px;background:#151720ed;border:1px solid #a68a53;color:#ead8b4;box-sizing:border-box}
 .asset-preparation h2{font-size:20px;margin:0 0 8px}.asset-preparation p{margin:7px 0;font-size:13px;line-height:1.6}.asset-preparation progress{width:100%;height:14px;accent-color:#d0ad63}.asset-preparation button{min-height:44px;margin:6px 8px 0 0}.title-actions[inert]{opacity:.4}
 @media(max-width:900px){.asset-preparation{padding:14px;margin-top:16px}}
+.download-metrics{display:flex;align-items:baseline;justify-content:space-between;gap:6px 18px;flex-wrap:wrap}.download-metrics [data-load-eta]{margin-left:auto;text-align:right;color:#ead3a0;font-variant-numeric:tabular-nums;white-space:nowrap}
