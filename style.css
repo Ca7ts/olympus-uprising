@@ -766,3 +766,23 @@ html body .battle-board>.battle-frame-ornament{
  border:1px solid transparent;border-image:var(--battle-frame,var(--art-ui_frame)) 18% / 22px / 0 stretch;
  background:none;
 }
+
+/* Obsidian plaques: chapter titles and rounds; story dialogue retains parchment. */
+html body :is(.mission-body h2,.current-node h2,.battle-overview>.phase-head h2,.center-band,.stage-round .stage-copy):not(#stone-banner-exclusion){
+ background:transparent var(--art-stone_banner,url("assets/stone_banner.png")) center/100% 100% no-repeat!important;
+ color:#e9f4ff!important;text-shadow:0 2px 3px #000,0 0 8px #5aaee533!important;
+ border:0!important;border-image:none!important;box-shadow:none!important;
+ text-align:center;padding:24px 15%!important;line-height:1.55;
+}
+html body :is(.center-band,.stage-round .stage-copy):not(#stone-banner-exclusion) :is(p,strong,small,span){
+ color:#e9f4ff!important;text-shadow:0 2px 3px #000!important;
+}
+html body .round-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;flex-shrink:0;padding:0 14px;position:relative;z-index:4}
+html body .round-controls .center-band{min-width:0;margin:0;overflow-wrap:anywhere}
+html body .round-controls .round-autoplay{white-space:nowrap;min-width:108px}
+html body .battle-overview>.phase-head h2{margin:8px 0}
+@media(max-width:600px){
+ html body .round-controls{gap:5px;padding:0 7px}
+ html body .round-controls .round-autoplay{min-width:80px;padding:10px 8px;font-size:12px}
+ html body .round-controls .center-band{padding:20px 12%!important}
+}
