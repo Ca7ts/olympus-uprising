@@ -583,3 +583,9 @@ button,.card,[role=button]{transform-origin:50% 65%}
 .fx-label{animation-name:battle-number-echo!important}
 @media(prefers-reduced-motion:reduce){body button.ui-spring,body .card.ui-spring,body [role=button].ui-spring{animation:none!important}.battle-number-echo{animation:none;display:none}.fx-label{animation:none!important}}
 body.quiet-motion button.ui-spring,body.quiet-motion .card.ui-spring{animation:none!important}
+
+.direct-command{padding:10px 16px;background:#171620ed;border-block:1px solid #a68b55;color:#efd9a5;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.direct-command button{padding:5px 10px;font-size:13px}
+.battle-board .unit.manual-eligible{outline:2px dashed #e2be79;outline-offset:-5px}
+.battle-board .unit.manual-actor{outline:4px solid #ffe198!important;outline-offset:-2px;box-shadow:inset 0 0 0 7px #a67b344d,0 0 20px #f1c95e99!important}
+.battle-board .unit.manual-target{outline:4px solid #ff7971!important;outline-offset:-2px;box-shadow:inset 0 0 0 7px #ff493a44,0 0 20px #ff584c99!important}
+.manual-selection-label{position:absolute;top:25px;left:50%;transform:translateX(-50%);z-index:8;padding:2px 7px;background:#17121aeb;border:1px solid #ffda8a;border-radius:4px;color:#ffe4a6;font-size:11px;white-space:nowrap;pointer-events:none}
