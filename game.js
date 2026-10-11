@@ -1114,7 +1114,7 @@ const BATTLE_MUSIC_INFO={temple:{title:'神殿・血誓破曉',bpm:152},forest:{
 function battleMusicScene(n){if(n.id===29)return 'gods';if(n.id===8||n.id===22)return 'forest';if(n.id===4||n.id===23)return 'temple';return ['land','sea','sky','temple','ice','night'][n.terrain]||'land';}
 const PAGE_MUSIC_INFO={"home":"厄里昂・逆命之誓","formation":"布陣・同袍並肩","divineCamp":"爐火・凡人的誓約","catalog":"圖鑑・萬族之書","campaign":"征途・遠方的晨光","recruitment":"召喚・星火相逢","enhancement":"覺醒・鍛火成鋼","rules":"法則・智者的棋局","achievements":"榮耀・同行者的勳章","saves":"旅記・不滅的火種","settings":"靜心・秩序之間"};
 const BattleScore=(()=>{
- const player=new Audio();player.loop=true;player.preload='auto';let key='',ownerSession=null,divineSession=null,playPending=false,failed=false,epoch=0;
+ const early=globalThis.olympusEarlyMusic;early?.detach();const player=early?.player||new Audio();player.loop=true;player.preload='auto';let key=early?'page:home':'',ownerSession=early?'pages':null,divineSession=null,playPending=false,failed=false,epoch=0;delete globalThis.olympusEarlyMusic;
  let prefs={volume:.32,muted:false,pageVolume:.28,pageMuted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-score')||'{}'));}catch{}
  prefs.volume=Number.isFinite(Number(prefs.volume))?Math.max(0,Math.min(1,Number(prefs.volume))):.32;
  function stop(){epoch++;player.pause();player.removeAttribute('src');player.load();key='';ownerSession=null;playPending=false;failed=false;}
