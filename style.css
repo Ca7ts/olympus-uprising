@@ -998,3 +998,22 @@ dialog.mobile-card-info[open]{display:flex;flex-direction:column}
 .mobile-card-info-body .detail-emblem{max-width:260px;margin-inline:auto}
 .mobile-card-info-body button{min-height:44px}
 dialog.mobile-card-info::backdrop{background:rgba(3,6,14,.78)}
+
+/* Compact profiles and drill-down enemy formation. */
+.detail-inner .identity-section .stat-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.detail-inner .identity-section .stat-grid>div{padding:8px 1px}
+.detail-inner .identity-section .stat-grid strong{font-size:clamp(13px,5cqw,20px)}
+.detail-inner .identity-section .stat-grid span{font-size:11px}
+.profile-preview-trigger{width:100%;min-height:44px;margin-top:14px}
+.enemy-summary h3{font-size:15px;margin:0 0 8px}.enemy-summary button{width:100%;min-height:44px}
+dialog.enemy-roster-dialog{width:min(680px,94vw);max-height:90dvh;overflow:auto;padding:18px}
+.enemy-roster-dialog .profile-modal-head{position:sticky;top:-18px;background:#1a1b25;z-index:2;gap:12px;flex-wrap:wrap}
+.enemy-roster-dialog .profile-modal-head button{min-height:44px;margin:4px}
+.enemy-roster-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.enemy-roster-grid button{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;padding:12px 6px}
+.enemy-roster-grid .mini-avatar{width:min(100%,92px);height:auto;aspect-ratio:2/3}
+.enemy-roster-grid span{font-size:12px;overflow-wrap:anywhere}
+.enemy-unit-info .portrait{width:160px;height:240px;margin:12px auto}
+.enemy-base-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;text-align:center}
+.enemy-base-stats strong{display:block;font-size:20px;color:#e8d19c}
+.enemy-unit-info h3{text-align:center}.enemy-unit-info p{line-height:1.8}
