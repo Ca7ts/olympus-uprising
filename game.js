@@ -530,7 +530,7 @@ if(a==='step'){step();return;}
 if(a==='manualBattle'){if(!battle||battle.done)return;setAutoBattlePreference(false);const wasManual=globalThis.mobileManualBattle===true;pause();globalThis.mobileManualBattle=true;if(!busy){render();if(wasManual)step();}return;}
 if(a==='battleSection'){openBattleSection(id,btn.dataset.section);return;}
 if(a==='battleCardInfo'){openBattleCardInfo(id||battleSelected);return;}
-if(a==='unit'){battleSelected=id;if(mobilePortraitLayout()){updateMobileCardDock();openBattleCardInfo(id);return;}if(busy){let box=document.querySelector('.battle-inspector');let unit=battle.units.find(u=>u.uid===id);if(box)box.innerHTML=detail(unit,unit);}else render();if(window.innerWidth<=800)document.querySelector('.battle-sidebar')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
+if(a==='unit'){battleSelected=id;if(mobilePortraitLayout()){updateMobileCardDock();return;}if(busy){let box=document.querySelector('.battle-inspector');let unit=battle.units.find(u=>u.uid===id);if(box)box.innerHTML=detail(unit,unit);}else render();if(window.innerWidth<=800)document.querySelector('.battle-sidebar')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
 if(a==='battlePolicy'){if(busy)return;let u=battle.units.find(x=>x.uid===id);if(u?.side===0&&u.skill&&u.hp>0){u.auto=!u.auto;render();}return;}
 if(a==='leave'){if(playing||busy)return;if(battle.done){leave();return;}pause();render();let d=document.getElementById('detail');d.innerHTML='<h2>暫時撤退？</h2><p style="margin:14px 0">本場戰鬥會結束，不影響卡牌與已完成的關卡。</p><div class="row"><button data-action="close">繼續作戰</button><button class="primary" data-action="confirmLeave">撤退回營</button></div>';d.showModal();return;}
 if(a==='confirmLeave'){if(playing||busy)return;document.getElementById('detail').close();leave();return;}
@@ -788,7 +788,7 @@ function selectableActors(){if(!battle||battle.done)return [];const q=pendingAct
   const toggle=e.target.closest('[data-direct-mode]'),card=e.target.closest('[data-action="unit"]');if(!toggle&&!card)return;
   resetSession();if(toggle){if(toggle.disabled)return;mode=toggle.dataset.directMode;if(mode==='cancel'){actorId=null;mode='attack';}render();return;}
   const v=battle.units.find(x=>x.uid===card.dataset.id);if(!v)return;
-  e.stopImmediatePropagation();globalThis.olympusAudio?.click();battleSelected=v.uid;if(mobilePortraitLayout())openBattleCardInfo(v.uid);
+  e.stopImmediatePropagation();globalThis.olympusAudio?.click();battleSelected=v.uid;if(mobilePortraitLayout())updateMobileCardDock();
   const u=actor();
   if(u&&legal(u,v)&&(v.side!==0||mode==='skill')){
    targetId=v.uid;commandPending=true;const current=battle.musicSession;render();
@@ -1441,7 +1441,7 @@ function scheduleCampSlides(){
 }
 function mobileCardDock(){
  const u=battle?.units.find(x=>x.uid===battleSelected)||battle?.units.find(x=>x.side===0&&x.active);if(!u)return '';
- return '<section class="mobile-card-dock" data-scroll-key="mobile-card-dock"><button class="dock-portrait r'+u.rarity+'" data-action="battleCardInfo" data-id="'+u.uid+'" aria-label="查看'+esc(u.name)+'資訊">'+avatar(u,'mini-avatar')+'</button><div class="dock-copy"><strong>'+esc(u.name)+'</strong><small>'+(u.side?'敵方':'我方')+' · '+esc(u.element)+' · '+esc(u.role)+'</small><p>生命 '+u.hp+'/'+u.max+'　攻 '+u.atk+'　防 '+u.def+'</p><p>'+esc(u.skill?u.skill.name:'普通攻擊')+(u.skill?' · 氣 '+u.qi+'/'+u.skill.cost:'')+'</p><small>點左側圖片查看完整資訊</small></div></section>';
+ return '<section class="mobile-card-dock" data-scroll-key="mobile-card-dock"><div class="dock-portrait r'+u.rarity+'">'+avatar(u,'mini-avatar')+'</div><div class="dock-copy"><strong>'+esc(u.name)+'</strong><small>'+(u.side?'敵方':'我方')+' · '+esc(u.element)+' · '+esc(u.role)+'</small><p>生命 '+u.hp+'/'+u.max+'　攻 '+u.atk+'　防 '+u.def+'</p><p>'+esc(u.skill?u.skill.name:'普通攻擊')+(u.skill?' · 氣 '+u.qi+'/'+u.skill.cost:'')+'</p><small>點選戰場卡牌切換資訊</small></div></section>';
 }
 function updateMobileCardDock(){const old=document.querySelector('.mobile-card-dock');if(old)old.outerHTML=mobileCardDock();}
 function openBattleCardInfo(uid){
