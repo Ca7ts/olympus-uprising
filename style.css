@@ -663,3 +663,29 @@ html body .below-roster h2{color:#ffe3ab;text-shadow:0 1px 2px #000;font-weight:
 html body :is(.summon-card,.pool-unlocked article,.guardian-pool-list article) :is(h3,p,small,strong){text-shadow:none;line-height:1.7}
 html body :is(.summon-card,.guardian-pool-list article) p{color:#e0ded8}
 html body .card .card-symbols>span{background:#0c1018f5!important;text-shadow:none!important;font-weight:700}
+
+/* Parchment display banners: passive text only; interactive controls keep their own skin. */
+html body :is(.stage-copy,.center-band,.mission-body h2,.current-node h2,.hint,.film-subtitles,.journey-film-copy,.replay-caption,.direct-command>span,#toast){
+ background-color:transparent!important;background-image:var(--art-text_banner,url("assets/text_banner.png"))!important;background-size:100% 100%!important;background-position:center!important;background-repeat:no-repeat!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important;
+ color:#302015!important;text-shadow:0 1px #fff1c56b!important;font-family:var(--font-epic)!important;font-weight:600;
+ text-align:center!important;padding:24px 36px!important;line-height:1.65;overflow-wrap:anywhere;
+ animation:scroll-banner-in .5s ease-out both;
+}
+html body :is(.center-band,.film-subtitles,.journey-film-copy,.stage-copy) :is(p,strong,small,span){color:#302015!important;text-shadow:0 1px #fff1c55c!important}
+html body :is(.film-subtitles,.journey-film-copy){padding:30px 7%!important;max-height:38dvh;overflow:auto}
+html body :is(.film-subtitles,.journey-film-copy) p{margin:4px 0!important;line-height:1.8!important;font-size:clamp(16px,1.5vw,22px)}
+html body :is(.film-subtitles,.journey-film-copy) .spoken-gold{color:#673708!important;text-shadow:0 0 1px #ab631e!important}
+html body .stage-copy{width:min(90%,820px);padding:36px 8%!important}
+html body .stage-copy strong{display:block;animation:none!important;transform:none!important;opacity:1!important;font-size:clamp(22px,4vw,48px)}
+html body .stage-copy .round-echo{display:none}
+html body .mission-body h2{padding:20px 24px!important;font-size:20px}
+html body .direct-command>span{flex:1;padding:18px 28px!important}
+html body #toast{min-width:220px;max-width:min(90vw,620px);visibility:hidden;animation:none;pointer-events:none}
+html body #toast.show{visibility:visible}
+html body .scroll-banner-in{animation:scroll-banner-in .5s ease-out both!important}
+html body .scroll-banner-out{animation:scroll-banner-out .35s ease-in both!important}
+@keyframes scroll-banner-in{from{opacity:0;translate:0 -18px;scale:1}to{opacity:1;translate:0 0;scale:1}}
+@keyframes scroll-banner-out{from{opacity:1;translate:0 0;scale:1 1}to{opacity:0;translate:0 0;scale:1.12 1}}
+@media(prefers-reduced-motion:reduce){html body :is(.stage-copy,.center-band,.mission-body h2,.current-node h2,.hint,.film-subtitles,.journey-film-copy,.replay-caption,.direct-command>span,.scroll-banner-in,.scroll-banner-out){animation:none!important}}
+html body.quiet-motion :is(.stage-copy,.center-band,.mission-body h2,.current-node h2,.hint,.film-subtitles,.journey-film-copy,.replay-caption,.direct-command>span,.scroll-banner-in,.scroll-banner-out){animation:none!important}
