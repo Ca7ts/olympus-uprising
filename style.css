@@ -597,7 +597,7 @@ body.quiet-motion button.ui-spring,body.quiet-motion .card.ui-spring{animation:n
 .gold-ultimate-portrait{position:absolute;left:9%;top:12%;width:28vw;max-width:350px;filter:drop-shadow(0 0 24px #e4bc65aa);animation:gold-reveal .65s ease-out both}
 .gold-ultimate-portrait .avatar{width:100%!important;height:auto!important;aspect-ratio:2/3}
 .gold-ultimate-copy{position:absolute;left:37%;right:7%;top:32%;padding:26px;background:linear-gradient(90deg,#080610ef,#100b1399,transparent);text-shadow:0 3px 8px #000}
-.gold-ultimate-copy small{color:#f3d494;letter-spacing:.15em}.gold-ultimate-copy h2{font-size:clamp(24px,4vw,64px);color:#fff0bd;line-height:1.5}.gold-ultimate-copy p{font-size:clamp(17px,2vw,30px);color:#f7e7d0;margin-top:16px}
+.gold-ultimate-copy small{color:#f3d494;letter-spacing:.15em}.gold-ultimate-copy h2{font-size:clamp(24px,4vw,64px);color:#fff0bd;line-height:1.5}.gold-ultimate-copy p{font-size:clamp(14px,1.25vw,19px);line-height:1.65;color:#f7e7d0;margin-top:16px;max-width:900px}
 .gold-ultimate-ring{position:absolute;left:50%;top:50%;width:35vmin;height:35vmin;border:5px double var(--gold-color);border-radius:50%;opacity:0;transform:translate(-50%,-50%)}
 .gold-ultimate-particles i{position:absolute;left:50%;top:50%;width:4px;height:45px;background:var(--gold-color);opacity:0;transform:rotate(calc(var(--i)*15deg)) translateY(-15vh)}
 .gold-ultimate.erupt{background:#08050c99}.gold-ultimate.erupt .gold-ultimate-art{filter:none;opacity:.86;animation:gold-impact .75s ease-out both}
