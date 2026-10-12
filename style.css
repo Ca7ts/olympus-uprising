@@ -1265,3 +1265,17 @@ html body .campaign-intel .commander-line>*{max-width:100%;overflow-wrap:anywher
 .journey-page .achievement.earned{background-image:linear-gradient(135deg,#61431bd9,#211a19eb),url('assets/war_iron.webp');background-position:center;background-size:cover;border-color:#d7b36c;box-shadow:inset 0 1px #fff0c94d,0 0 0 1px #d7b36c66,0 0 24px #c48b3e44,0 9px 15px #0007}
 .journey-page>header [data-journey="return"]{min-width:112px}
 @media(max-width:800px){html body :is(.formation-workspace,.catalog-view,.enhancement-collection) .catalog{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;padding:8px!important}html body :is(.formation-workspace,.catalog-view,.enhancement-collection) .catalog>.card{min-height:390px}}
+/* Summon results share one portrait box and aligned text rows in both pools. */
+html body dialog.summon-dialog .summon-results{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));align-items:stretch;gap:20px;padding:10px}
+html body dialog.summon-dialog .summon-card{position:relative;display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:10px;isolation:isolate;overflow:visible}
+html body dialog.summon-dialog .summon-card>.summon-portrait{display:block;float:none;width:100%;height:auto!important;min-height:0;max-height:none;aspect-ratio:2/3;flex:none;margin:0 0 12px;box-sizing:border-box}
+html body dialog.summon-dialog .summon-card>:is(.badge,.limited-label){position:static;align-self:flex-start;min-height:24px;box-sizing:border-box}
+html body dialog.summon-dialog .summon-card>h3{min-height:4.8em;margin:8px 0;overflow-wrap:anywhere}
+html body dialog.summon-dialog .summon-card>p{min-height:3.4em;margin:0 0 12px}
+html body dialog.summon-dialog .summon-card>button{margin-top:auto}
+/* Separate glow from the arrival transform; retain the brightest state. */
+html body dialog.summon-dialog .summon-card:is(.summon-gold-reveal,.summon-limited-reveal)::before{content:'';position:absolute;inset:0;border:2px solid #ffe7a0;border-radius:8px;pointer-events:none;z-index:2;opacity:1;box-shadow:inset 0 0 18px #f9d46e66,0 0 12px 3px #f0c65caa,0 0 24px 5px #a9672788;animation:summon-result-radiance 1.3s ease-in-out var(--reveal-delay,0s) 3 both}
+@keyframes summon-result-radiance{0%,30%{opacity:.18}65%,100%{opacity:1}}
+@media(max-width:600px){html body dialog.summon-dialog .summon-results{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:8px 2px}}
+@media(prefers-reduced-motion:reduce){html body dialog.summon-dialog .summon-card::before{animation:none!important}}
+html.quiet-motion body dialog.summon-dialog .summon-card::before{animation:none!important}
