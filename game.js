@@ -384,7 +384,7 @@ function showArt(id){const c=CARD[id];if(!c)return;stopNodeStory();const d=docum
 let playing=false,busy=false,pauseAtRound=false,announcedRound=0,liveFx=[],entryUids=[],fxDuration=650;
 let quickSettleUnlockAt=0,quickSettleTimer=null;
 let presentationEpoch=0;const pendingPresentation=new Set();
-function motionDuration(kind){const base={entry:900,round:1450,cast:1100,impact:650,skill:1600};const factor=delay===60?1/3:delay===180?.55:delay===1000?1.25:1;const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;return Math.round((base[kind]||650)*(reduced?Math.min(.55,factor):factor));}
+function motionDuration(kind){const base={entry:900,round:1450,cast:1100,impact:650,skill:1600,death:1100};const factor=delay===60?1/3:delay===180?.55:delay===1000?1.25:1;const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;return Math.round((base[kind]||650)*(reduced?Math.min(.55,factor):factor));}
 function waitPresentation(ms,epoch){return new Promise(resolve=>{let record={id:null,resolve};record.id=setTimeout(()=>{pendingPresentation.delete(record);resolve(epoch===presentationEpoch);},ms);pendingPresentation.add(record);});}
 function cancelPresentation(){stopCatalogVoice();stopGoldCinematic();globalThis.olympusAudio?.stop();presentationEpoch++;for(const p of pendingPresentation){clearTimeout(p.id);p.resolve(false);}pendingPresentation.clear();busy=false;liveFx=[];entryUids=[];announcedRound=0;document.getElementById('stageOverlay').innerHTML='';}
 function roundWords(n){const digits=['','一','二','三','四','五','六','七','八','九'];return '第'+(n<10?digits[n]:n<20?'十'+digits[n%10]:digits[Math.floor(n/10)]+'十'+digits[n%10])+'回合';}
@@ -406,9 +406,11 @@ if(pauseAtRound&&playing){pause();busy=false;render();toast('回合開始前已�
 const cast=events.find(e=>e.kind==='cast');if(cast){const actor=projected.units.find(u=>u.uid===cast.actor);if(!await showSkillInvocation(actor,cast,epoch))return false;}
 if(epoch!==presentationEpoch)return false;
 if(projected.last){const actor=battle.units.find(u=>u.uid===projected.last.actor);if(!await animateTargetEffects(actor,events,epoch))return false;}
+const deathState=projected.impactUnits||projected.units;const fallen=battle.units.filter(u=>u.hp>0&&deathState.some(v=>v.uid===u.uid&&v.hp<=0));
 CombatAudio.reactions(events,battle.units,projected.impactUnits||projected.units);liveFx=events.filter(e=>!['round','cast','entry'].includes(e.kind));fxDuration=goldImpactDuration||motionDuration('impact');
 battle={...projected,units:projected.impactUnits||projected.units,done:false,winner:null};render();
 if(!await waitPresentation(goldImpactDuration||(liveFx.length?fxDuration:100),epoch))return false;stopGoldCinematic();document.getElementById('stageOverlay').innerHTML='';
+if(!await animateDeathBurn(fallen,epoch))return false;
 battle=projected;battle.impactUnits=null;recordBattleFrame(battle);liveFx=[];entryUids=events.filter(e=>e.kind==='entry').map(e=>e.target);
 if(entryUids.length){fxDuration=motionDuration('entry');render();if(!await waitPresentation(fxDuration,epoch))return false;}
 entryUids=[];settle();return true;
@@ -1637,3 +1639,32 @@ function openBattleSection(uid,key){const u=battle?.units.find(x=>x.uid===uid),s
 
 function browserVoiceControls(){return '<h3>台灣人聲試聽</h3><p>'+esc(BrowserSpeech.status())+'</p><div class="catalog-preview-actions">'+['O001','O002','O003','O004','O005'].map(id=>'<button data-browser-sample="'+id+'">'+esc(CARD[id].name)+' · '+esc(CARD[id].skill.name)+'</button>').join('')+'<button data-browser-stop>停止試聽</button></div><p data-browser-status role="status">只念技能名稱；聲線依裝置而異。</p>';}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-browser-sample],[data-browser-stop]');if(!b)return;const status=b.closest('dialog')?.querySelector('[data-browser-status]');if(b.hasAttribute('data-browser-stop')){BrowserSpeech.stop();if(status)status.textContent='已停止';return;}if(battle){if(status)status.textContent='請先結束戰鬥再試聽，避免打斷戰鬥配音。';return;}const c=CARD[b.dataset.browserSample],a=speechClipAudio(goldSkillRecord(c,c.skill.name));let prefs={volume:.45,muted:false};try{Object.assign(prefs,JSON.parse(localStorage.getItem('olympus-combat-audio')||'{}'));}catch{}if(prefs.muted){if(status)status.textContent='請先解除音效靜音';return;}a.volume=Number(prefs.volume);if(status)status.textContent=c.name+'：'+c.skill.name;a.onended=()=>{if(status)status.textContent='試聽完畢';};a.onerror=()=>{if(status)status.textContent='無法播放，請確認系統已安裝中文語音';};b.closest('dialog')?.addEventListener('close',()=>a.dispose(),{once:true});a.play().catch(()=>a.onerror?.());});
+
+async function animateDeathBurn(fallen,epoch){
+ if(!fallen.length)return true;
+ const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||document.documentElement.classList.contains('quiet-motion');
+ const duration=reduced?180:motionDuration('death'),layers=[];
+ try{
+  for(const u of fallen){
+   const card=[...document.querySelectorAll('.battle-board .unit[data-id]')].find(el=>el.dataset.id===String(u.uid));
+   const art=card?.querySelector('.painted-avatar');if(!art)continue;
+   const rect=art.getBoundingClientRect();if(!rect.width||!rect.height)continue;
+   const layer=document.createElement('div');layers.push(layer);layer.setAttribute('aria-hidden','true');
+   layer.style.cssText=`position:fixed;pointer-events:none;z-index:90;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;`;
+   const clone=art.cloneNode(true);clone.querySelectorAll('.living-card-host').forEach(el=>el.remove());clone.classList.remove('legendary-card');
+   clone.style.cssText=art.style.cssText+`;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;animation:none!important;translate:none!important;rotate:none!important;opacity:1;visibility:visible!important;`;
+   layer.append(clone);document.body.append(layer);art.style.setProperty("visibility","hidden","important");
+   if(reduced){clone.animate([{opacity:1},{opacity:0}],{duration,fill:'forwards'});continue;}
+   const cut=y=>`polygon(0 ${y}%,12% ${y-3}%,25% ${y+2}%,39% ${y-1}%,52% ${y+3}%,68% ${y-2}%,83% ${y+1}%,100% ${y}%,100% 100%,0 100%)`;
+   clone.animate([{filter:'brightness(1)',clipPath:cut(-6),opacity:1},{filter:'sepia(1) saturate(1.8) brightness(.55)',clipPath:cut(-6),opacity:1,offset:.18},{filter:'sepia(1) brightness(.18)',clipPath:cut(52),opacity:1,offset:.62},{filter:'brightness(.1)',clipPath:cut(103),opacity:0}],{duration,fill:'forwards',easing:'ease-in'});
+   const flame=document.createElement('i');flame.style.cssText='position:absolute;left:-3%;width:106%;height:14%;background:linear-gradient(transparent,#d3350877,#ffae32,#fff2a1,#e44f0f,transparent);clip-path:polygon(0 35%,12% 12%,25% 48%,39% 22%,52% 55%,68% 18%,83% 40%,100% 28%,100% 85%,0 100%);filter:drop-shadow(0 0 5px #ff671c);';layer.append(flame);
+   flame.animate([{top:'-10%',opacity:0},{top:'-5%',opacity:1,offset:.18},{top:'48%',opacity:1,offset:.62},{top:'95%',opacity:0}],{duration,fill:'forwards',easing:'ease-in'});
+   for(let i=0;i<12;i++){
+    const ember=document.createElement('i'),start=.16+i*.052,x=8+(i*37)%86,y=start*90;
+    ember.style.cssText=`position:absolute;left:${x}%;top:${y}%;width:${2+i%3}px;height:${3+i%4}px;background:${i%3?'#ffb74b':'#66605b'};box-shadow:0 0 5px #fa7028;border-radius:1px;opacity:0;`;layer.append(ember);
+    ember.animate([{opacity:0,transform:'translate(0,0)'},{opacity:1,offset:.12},{opacity:0,transform:`translate(${(i%2?1:-1)*(10+i*2)}px,-${18+i*3}px) rotate(${i*37}deg)`}],{duration:duration*(1-start),delay:duration*start,fill:'forwards',easing:'ease-out'});
+   }
+  }
+  return await waitPresentation(duration,epoch);
+ }finally{layers.forEach(layer=>{layer.getAnimations({subtree:true}).forEach(a=>a.cancel());layer.remove();});}
+}

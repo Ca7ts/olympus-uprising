@@ -1,0 +1,3 @@
+/* Burned portraits leave their battle slot and status available. */
+html body .battle-board .unit.dead > .painted-avatar{visibility:hidden!important}
+html body .battle-board .unit.dead:has(.unit-fx) > .painted-avatar{visibility:visible!important}
