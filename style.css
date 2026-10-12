@@ -1103,6 +1103,62 @@ html body main.shell:has(>.setup-layout)>.phase-head .meta,html body .formation-
 .asset-preparation{grid-column:1/-1;align-self:end;width:100%;padding:18px 24px;background:#151720ed;border:1px solid #a68a53;color:#ead8b4;box-sizing:border-box}
 .asset-preparation h2{font-size:20px;margin:0 0 8px}.asset-preparation p{margin:7px 0;font-size:13px;line-height:1.6}.asset-preparation progress{width:100%;height:14px;accent-color:#d0ad63}.asset-preparation button{min-height:44px;margin:6px 8px 0 0}.title-actions[inert]{opacity:.4}
 @media(max-width:900px){.asset-preparation{padding:14px;margin-top:16px}}
+
+/* Mobile battle landscape: keep the portrait information order while using the wide edge. */
+.battle-mobile-only{display:none}
+@media(max-width:900px) and (orientation:portrait){html body .battle-shell .battle-controls .battle-mobile-only{display:inline-flex!important}}
+@media(max-width:900px) and (orientation:landscape){
+ html body:has(.battle-shell){margin:0;overflow:hidden;background:#080b12}
+ html body:has(.battle-shell) .top,
+ html body .battle-shell>.nav,html body .battle-shell>footer,
+ html body .battle-shell .battle-overview,
+ html body .battle-shell .battle-sidebar>.inspector-panel,
+ html body .battle-shell .battle-sidebar>.battle-record,
+ html body .battle-shell .battle-frame-ornament,
+ html body .battle-shell .chapter-battle-art,
+ html body .battle-shell .battle-board>.board-head,
+ html body .battle-shell .battle-board>.row,
+ html body .battle-shell .command-panel>.sidebar-heading,
+ html body .battle-shell .round-pause{display:none!important}
+ html body .battle-shell{height:100dvh;width:100vw;max-width:none;margin:0;padding:4px!important;overflow:hidden}
+ html body .battle-shell .battle-layout{height:100%;width:100%;display:grid;grid-template-columns:minmax(0,1fr) clamp(176px,27vw,230px);grid-template-rows:minmax(0,1fr) clamp(76px,22dvh,96px);grid-template-areas:"board controls" "dock controls";gap:5px!important;overflow:hidden}
+ html body .battle-shell .battle-board{grid-area:board;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto minmax(0,1fr)!important;align-items:stretch;width:100%;height:100%;min-width:0;min-height:0;margin:0;padding:4px!important;overflow:hidden;background:#0c111b!important;border:1px solid #62533b;border-image:none!important;box-shadow:none!important;animation:none!important}
+ html body .battle-shell .battle-board .army-grid:not(#mobile-focus){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;flex:1 1 0;min-width:0;min-height:0!important;max-height:none!important;overflow:hidden!important;align-items:stretch!important;gap:3px!important;padding:3px!important;width:100%}
+ html body .battle-shell .battle-board .army-grid>.unit:not(#mobile-focus){display:block!important;position:relative;width:100%!important;min-width:0!important;max-width:none!important;height:100%!important;min-height:0!important;max-height:none!important;margin:0!important;padding:1px!important;transform:none!important;flex:none!important;overflow:hidden}
+ html body .battle-shell .battle-board .army-grid>.unit>.painted-avatar:not(#mobile-focus){position:absolute;left:50%;top:0;transform:translateX(-50%);height:calc(100% - 13px)!important;width:auto!important;max-width:94%!important;min-width:0!important;min-height:0!important;max-height:none!important;aspect-ratio:2/3;margin:0!important}
+ html body .battle-shell .battle-board .army-grid .unit-vitals{bottom:1px!important;font-size:9px}
+ html body .battle-shell .battle-board .army-grid .bar{bottom:12px!important;height:2px!important}
+ html body .battle-shell .battle-board .army-grid :is(.turn-badge,.unit-bond,.flags,.unit-qi){display:none!important}
+ html body .battle-shell .round-controls{align-self:center;margin:0;padding:0!important}
+ html body .battle-shell .center-band:not(#mobile-focus){min-height:22px!important;padding:2px 6px!important;background:none!important;border:0!important;animation:none!important}
+ html body .battle-shell .center-band>strong{font-size:13px!important;line-height:1.2}
+ html body .battle-shell .center-band>p{font-size:9px!important;line-height:1.2;max-height:20px;overflow:hidden;margin:0}
+ html body .battle-shell .mobile-card-dock{grid-area:dock;position:static!important;z-index:auto;display:flex!important;width:100%;height:100%!important;min-width:0;min-height:0;box-sizing:border-box;gap:8px;padding:6px;background:linear-gradient(120deg,#24212b,#111720);border:1px solid #9a8051;overflow:hidden}
+ html body .battle-shell .mobile-card-dock .dock-portrait{flex:0 0 auto;width:auto;height:100%;aspect-ratio:2/3;min-width:0;padding:0;background:none;transform:none;animation:none}
+ html body .battle-shell .mobile-card-dock .mini-avatar{width:100%;height:100%;margin:0}
+ html body .battle-shell .mobile-card-dock .dock-copy{flex:1;min-width:0;overflow-y:auto;overscroll-behavior:contain;line-height:1.25}
+ html body .battle-shell .mobile-card-dock .dock-copy strong{display:block;color:#efd79e;font-size:12px;line-height:1.25}
+ html body .battle-shell .mobile-card-dock .dock-copy small{display:block;color:#c2c8d4;font-size:9px;line-height:1.2}
+ html body .battle-shell .mobile-card-dock .dock-copy p{font-size:9px;color:#e4e8ee;margin:2px 0;line-height:1.25}
+ html body .battle-shell .dock-skill-label{color:#e7c982!important;font-weight:700}
+ html body .battle-shell .battle-sidebar{display:contents!important}
+ html body .battle-shell .command-panel{grid-area:controls;position:static!important;display:block!important;width:100%;height:100%;min-width:0;max-height:none!important;overflow-y:auto!important;padding:4px!important;background:#0c101af5!important;border:1px solid #443b31!important;border-radius:5px;box-shadow:none!important;animation:none!important}
+ html body .battle-shell .battle-controls{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:4px!important;padding:0!important;overflow:visible!important;border:0!important}
+ html body .battle-shell .battle-controls .speed-autoplay,
+ html body .battle-shell .battle-controls .direct-command,
+ html body .battle-shell .battle-controls .direct-command>.row,
+ html body .battle-shell .battle-controls .mobile-battle-exit{display:contents!important}
+ html body .battle-shell .battle-controls .direct-command>span{display:block!important;grid-column:1/-1;text-align:center!important;color:#e5d2aa!important;font-size:10px!important;line-height:1.2;padding:2px!important}
+ html body .battle-shell .battle-controls button,
+ html body .battle-shell .battle-controls select{display:inline-flex;align-items:center;justify-content:center;min-width:0!important;width:100%;min-height:38px!important;height:auto!important;padding:4px!important;font-size:10px!important;line-height:1.2;white-space:normal!important;touch-action:manipulation}
+ html body .battle-shell .battle-controls select{font-size:10px!important}
+ html body .battle-shell .battle-controls>[data-action=fastBattle],
+ html body .battle-shell .battle-controls>[data-action=battleReplay]{display:none!important}
+ html body .battle-shell .battle-controls [data-action=play]{min-width:0!important}
+ html body .battle-shell .battle-controls .battle-mobile-only{display:inline-flex!important}
+ html body .battle-shell .battle-controls .round-pause{display:none!important}
+ html body .battle-shell .mobile-battle-exit{order:5}
+}
 .download-metrics{display:flex;align-items:baseline;justify-content:space-between;gap:6px 18px;flex-wrap:wrap}.download-metrics [data-load-eta]{margin-left:auto;text-align:right;color:#ead3a0;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* Match the non-battle section headers, objective strips, and settings rows to the Formation Camp war-worn artwork. */
