@@ -1248,3 +1248,10 @@ html body .quick-settings-modal .settings-list>label{
  html body .formation-workspace .catalog>.card .story-exclusive-avatar{display:inline-block!important;visibility:visible!important;opacity:1!important}
  html body .formation-workspace .catalog>.card .story-exclusive-avatar .art-panel{display:block!important;visibility:visible!important;opacity:1!important}
 }
+
+/* Rare summon reveal: preserve the bronze-and-gold interface while making premium pulls unmistakable. */
+.summon-card.summon-gold-reveal{border-color:#f2d27d;animation:summon-arrive .45s ease-out var(--reveal-delay,0s) both,summon-gold-glow 1.35s ease-in-out calc(var(--reveal-delay,0s) + .45s) 3}
+.summon-card.summon-limited-reveal{border-color:#ead19a;animation:summon-arrive .45s ease-out var(--reveal-delay,0s) both,summon-limited-glow 1.5s ease-in-out calc(var(--reveal-delay,0s) + .45s) 3}
+@keyframes summon-gold-glow{0%,100%{box-shadow:inset 0 1px 0 #fff5b633,0 5px 0 #0b0a11,0 12px 20px #0004}50%{box-shadow:inset 0 1px 0 #fff8c888,0 0 12px 3px #f0c65caa,0 0 32px 8px #a96727aa,0 12px 24px #0008}}
+@keyframes summon-limited-glow{0%,100%{box-shadow:inset 0 1px 0 #fff5b633,0 5px 0 #0b0a11,0 12px 20px #0004}50%{box-shadow:inset 0 1px 0 #fff8c888,0 0 14px 4px #f5dfa0cc,0 0 36px 10px #be873cbb,0 12px 24px #0008}}
+@media(prefers-reduced-motion:reduce){.summon-card.summon-gold-reveal,.summon-card.summon-limited-reveal{animation:none;box-shadow:0 0 0 1px #efd17b,0 0 18px 4px #c99a4eaa}}
