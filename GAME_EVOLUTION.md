@@ -29,7 +29,8 @@
 - 全通關測試倍率是暫時設定；結束測試時將 `TEST_CAMPAIGN_REWARD_MULTIPLIER` 改回 `1`，全通關後餘燼回到 2 倍、殘魂回到正常倍率。
 
 ## 近期版本紀錄
-- [抽卡結果新增再次召喚按鈕](https://github.com/Ca7ts/olympus-uprising/commit/39f10c8033020a0138a568bb85f66b86e53666b3)`n
+- [抽卡結果新增再次召喚按鈕](https://github.com/Ca7ts/olympus-uprising/commit/39f10c8033020a0138a568bb85f66b86e53666b3)
+
 - [修復篇章過場語音資產](https://github.com/Ca7ts/olympus-uprising/commit/9dc531fb2ce05c298bc07df09b8c7758f721050c)
 - [金卡奧義說明與淡出後結算](https://github.com/Ca7ts/olympus-uprising/commit/ac4a2fc576c31b1c98a9a5bca9b0b6ab1ab67d30)
 - [戰役餘燼與殘魂 20 倍測試倍率](https://github.com/Ca7ts/olympus-uprising/commit/d7e20b69bf1454dfc3e0ecd077fe9b04fe963666)
