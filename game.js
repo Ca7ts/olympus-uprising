@@ -1170,7 +1170,7 @@ const CombatAudio=(()=>{
  const uiPlayers=Object.fromEntries(['button_hover','button_click'].map(key=>{const audio=new Audio(globalThis.OLYMPUS_SFX?.[key]||'');audio.preload='auto';audio.load();return [key,audio];}));
  function uiSound(key,level){if(prefs.muted||document.hidden)return;const audio=uiPlayers[key];if(!audio?.getAttribute('src'))return;audio.pause();audio.currentTime=0;audio.volume=Math.max(0,Math.min(1,prefs.volume*level));audio.play().catch(()=>{});}
  document.addEventListener('visibilitychange',()=>{if(document.hidden)Object.values(uiPlayers).forEach(a=>a.pause());});
- return {sound,stop,controls,reactions,hover(){uiSound('button_hover',.28);},click(){uiPlayers.button_hover.pause();uiSound('button_click',.48);}};
+ return {sound,stop,controls,reactions,hover(){uiSound('button_hover',.364);},click(){uiPlayers.button_hover.pause();uiSound('button_click',.624);}};
 })();
 
 globalThis.olympusAudio=CombatAudio;
