@@ -31,6 +31,7 @@
 ## 近期版本紀錄
 - [抽卡結果新增再次召喚按鈕](https://github.com/Ca7ts/olympus-uprising/commit/39f10c8033020a0138a568bb85f66b86e53666b3)
 - [限定與金卡召喚發光及音效](https://github.com/Ca7ts/olympus-uprising/commit/643ccf4ce9347d8391139e089ab4c457035c6623)
+- [卡牌排列、守將資訊、成就背景與返回導覽調整](https://github.com/Ca7ts/olympus-uprising/commit/f9869021bfb6bbad235498e00e419a2bdffe1df6)
 
 - [修復篇章過場語音資產](https://github.com/Ca7ts/olympus-uprising/commit/9dc531fb2ce05c298bc07df09b8c7758f721050c)
 - [金卡奧義說明與淡出後結算](https://github.com/Ca7ts/olympus-uprising/commit/ac4a2fc576c31b1c98a9a5bca9b0b6ab1ab67d30)
