@@ -66,12 +66,12 @@
  new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
  function pose(r,t){
   const expressive=r.host.dataset.motionProfile!=='original';
-  const breathGain=expressive?1.8:1;
+  const breathGain=expressive?1.4:1;
   const b=Math.sin(t*1.45+r.phase);r.root.scale({x:1+b*.0008*breathGain,y:1+b*.0018*breathGain});
   for(let i=0;i<r.parts.length;i++){
    const {joint,p,x,y}=r.parts[i],wave=Math.sin(t*(p.kind==='wing'?1.25:p.kind==='cloth'?1.65:1.35)+r.phase+i*.9);
-   // Approved expressive profile: preserve each rig pivot, amplify motion by part type.
-   const gain=expressive?(p.kind==='cloth'?2.4:p.kind==='sway'?1.8:2.6):1;
+   // Midpoint profile: halfway between original and expressive amplitude for each part type.
+   const gain=expressive?(p.kind==='cloth'?1.7:p.kind==='sway'?1.4:1.8):1;
    joint.rotation(wave*p.angle*(p.kind==='cloth'?.55:1)*gain);
    joint.position({x:x+(p.kind==='cloth'?wave*r.rig.width*.0017*gain:0),y:y+(p.kind==='sway'?wave*r.rig.height*.0012*gain:0)});
    joint.scaleX(p.kind==='wing'?1+wave*.006*gain:1);
