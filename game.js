@@ -637,7 +637,7 @@ host._fadeTimer=setTimeout(()=>{if(host.isConnected&&+host.dataset.frame===index
 /* Campaign front end: local saves, achievements, opening and result presentation. */
 (()=>{
 const STORE=KEY+'-journey';
-let hub='home',film=null,filmClock=null,filmToken=0,resultBattle=null;globalThis.olympusMusicHub=hub;
+let hub='home',hubOrigin=null,film=null,filmClock=null,filmToken=0,resultBattle=null;globalThis.olympusMusicHub=hub;
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))||fallback;}catch{return fallback;}};
 let prefs=Object.assign({pace:1,motion:false,speed:650},read(STORE+'-settings',{}));
 prefs.pace=[.8,1,1.4].includes(+prefs.pace)?+prefs.pace:1;prefs.speed=[180,650,1000].includes(+prefs.speed)?+prefs.speed:650;
@@ -672,9 +672,9 @@ function renderHub(){globalThis.olympusMusicHub=hub;globalThis.olympusScore?.syn
  if(hub==='saves'){content=`<h1>檔案存取</h1><p>自動存檔保留目前進度；手動槽位保存獨立快照。讀取前會保留目前進度的復原備份。</p><div class="save-grid">${[0,1,2].map(i=>{const s=read(STORE+'-slot'+i,null);return `<article class="achievement"><h2>存檔 ${i+1}</h2><p>${s&&validSave(s.state)?'已通關 '+s.state.cleared+' / 30 · '+esc(s.date):'尚無存檔'}</p>${jb('save'+i,'儲存於此')}${s&&validSave(s.state)?jb('load'+i,'讀取'):''}</article>`;}).join('')}</div><div class="row">${jb('export','匯出目前存檔')}${jb('import','匯入存檔')}${validSave(read(STORE+'-backup',null))?jb('restore','讀取復原備份'):''}</div><p class="meta">換裝置或換檔案路徑前，建議匯出備份。瀏覽器可能隔離不同檔案的本機資料。</p>`;}
  if(hub==='settings'){content=`<h1>設置</h1><div class="settings-list">${globalThis.olympusAudio?.controls()||''}${globalThis.olympusScore?.controls()||''}<label>故事閱讀速度<select data-pref="pace">${[[.8,'較快'],[1,'標準'],[1.4,'慢速']].map(([v,t])=>`<option value="${v}" ${prefs.pace===v?'selected':''}>${t}</option>`).join('')}</select></label><label>預設戰鬥速度<select data-pref="speed">${[[1000,'慢速'],[650,'標準'],[180,'快速']].map(([v,t])=>`<option value="${v}" ${prefs.speed===v?'selected':''}>${t}</option>`).join('')}</select></label><label><input type="checkbox" data-pref="motion" ${prefs.motion?'checked':''}> 減少動態效果</label><label><input type="checkbox" data-pref="large" ${prefs.large?'checked':''}> 放大故事字幕</label></div><p class="meta">設定自動保存。頁面音樂與戰鬥配樂可分別調整。</p>${jb('opening','重看開場故事')}`;}
  if(hub==='exit'){content='<h1>旅程已暫歇</h1><p>已嘗試保存目前進度。你可以關閉此分頁，或返回主選單。</p>';}
- app.innerHTML=`<main class="journey-page"><header>${jb('home','← 主選單')}${jb('resume','返回遊戲')}</header>${content}</main>`;
+ app.innerHTML=`<main class="journey-page"><header>${jb('return','← 返回')}</header>${content}</main>`;
 }
-function enter(destination='formation'){hub=null;globalThis.olympusMusicHub=null;view=destination;render();window.scrollTo(0,0);}
+function enter(destination='formation'){hub=null;hubOrigin=null;globalThis.olympusMusicHub=null;view=destination;render();window.scrollTo(0,0);}
 function dialog(title,body,buttons){globalThis.stopStoryReading?.();panel.className='journey-modal';panel.innerHTML=`<h2>${title}</h2><p>${body}</p><div class="row">${buttons}</div>`;if(!panel.open)panel.showModal();}
 function backup(){return storage(STORE+'-backup',state);}
 function loadState(s){if(!validSave(s)){toast('存檔無效，未更改目前進度。');return;}if(!backup())return;state=JSON.parse(JSON.stringify(s));state.node=state.mode==='campaign'?Math.min(state.cleared,29):state.node;selected=lineup().find(Boolean)||initial[0];page=0;persist();enter();}
@@ -684,8 +684,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-journey]')
   if(a==='result-retry'){const retryNode=battle?.nodeId;if(!battle||battle.winner!==0||!Number.isInteger(retryNode))return;panel.close();state.node=retryNode;start();return;}
  if(a==='result-next'){const ending=battle?.winner===0&&battle.nodeId===29&&state.mode==='campaign';panel.close();leave();if(ending)playFilm('尾聲 · 今年的第一束麥穗',[[29,3,'你請求的沒有包括王冠。神庭的命令必須重新接受檢視，凡人開始共同決定自己的生活。'],[0,0,'回到村莊後，達蒙挑出仍能播種的種子。採石場拆下鎖鏈，工匠用石材修起水渠與糧倉。'],[0,3,'議事場的爭論沒有停止。有人質問你的決定，你聽著，沒有命人把他帶走。'],[0,2,'第一束麥穗留給祭壇，一份種子留在糧倉，其餘被磨成麵粉，分到每一張桌上。'],[0,4,'你把破盾掛在穀倉門邊。它仍能替守夜的燈擋去一點風；明天的事，大家可以一起決定。']],()=>enter('campaign'));return;}
  if(a==='film-next'){advanceFilm();return;}if(a==='film-skip'){endFilm();return;}if(a==='film-pause'){if(!film)return;film.paused=!film.paused;b.textContent=film.paused?'繼續':'暫停';clearTimeout(filmClock);if(filmVoice){if(film.paused)filmVoice.pause();else filmVoice.play().catch(()=>{});}else if(!film.paused)scheduleFilm();return;}
- if(a==='resume'){enter();return;}if(a==='campaign'){state.mode='campaign';state.node=Math.min(state.cleared,29);selected=lineup().find(Boolean)||initial[0];persist();enter('campaign');return;}
- if(['home','achievements','saves','settings'].includes(a)){if(battle)return;hub=a;renderHub();window.scrollTo(0,0);return;}
+ if(a==='return'){const origin=hubOrigin;hubOrigin=null;if(origin?.hub){hub=origin.hub;renderHub();}else{hub=null;globalThis.olympusMusicHub=null;view=origin?.view||'formation';render();}requestAnimationFrame(()=>window.scrollTo(origin?.x||0,origin?.y||0));return;}if(a==='resume'){enter();return;}if(a==='campaign'){state.mode='campaign';state.node=Math.min(state.cleared,29);selected=lineup().find(Boolean)||initial[0];persist();enter('campaign');return;}
+ if(['home','achievements','saves','settings'].includes(a)){if(battle)return;hubOrigin={hub,view,x:scrollX,y:scrollY};hub=a;renderHub();window.scrollTo(0,0);return;}
  if(a==='exit'){persist();hub='exit';renderHub();return;}
  if(a==='new'){dialog('開始新的旅程？','目前進度會先存入復原備份；手動存檔不會刪除。新旅程的戰役與成就將重新開始。',jb('dismiss','取消')+jb('confirm-new','備份並開始','primary'));return;}
  if(a==='confirm-new'){if(!backup())return;panel.close();state={version:1,mode:'campaign',node:0,cleared:0,lineups:{campaign:[...initial],trial:[...trial]},presets:{campaign:[],trial:[]},policies:{},recruitment:newRecruitment(),journey:{begun:true,read:[],unlocked:[]}};selected=initial[0];page=0;persist();enter();opening();return;}
