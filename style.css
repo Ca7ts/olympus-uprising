@@ -1250,8 +1250,18 @@ html body .quick-settings-modal .settings-list>label{
 }
 
 /* Rare summon reveal: preserve the bronze-and-gold interface while making premium pulls unmistakable. */
-.summon-card.summon-gold-reveal{border-color:#f2d27d;animation:summon-arrive .45s ease-out var(--reveal-delay,0s) both,summon-gold-glow 1.35s ease-in-out calc(var(--reveal-delay,0s) + .45s) 3}
-.summon-card.summon-limited-reveal{border-color:#ead19a;animation:summon-arrive .45s ease-out var(--reveal-delay,0s) both,summon-limited-glow 1.5s ease-in-out calc(var(--reveal-delay,0s) + .45s) 3}
-@keyframes summon-gold-glow{0%,100%{box-shadow:inset 0 1px 0 #fff5b633,0 5px 0 #0b0a11,0 12px 20px #0004}50%{box-shadow:inset 0 1px 0 #fff8c888,0 0 12px 3px #f0c65caa,0 0 32px 8px #a96727aa,0 12px 24px #0008}}
-@keyframes summon-limited-glow{0%,100%{box-shadow:inset 0 1px 0 #fff5b633,0 5px 0 #0b0a11,0 12px 20px #0004}50%{box-shadow:inset 0 1px 0 #fff8c888,0 0 14px 4px #f5dfa0cc,0 0 36px 10px #be873cbb,0 12px 24px #0008}}
+.summon-card.summon-gold-reveal{border-color:#f2d27d;animation:summon-arrive .45s ease-out var(--reveal-delay,0s) both,summon-gold-glow 1.35s ease-in-out calc(var(--reveal-delay,0s) + .45s) 3 forwards}
+.summon-card.summon-limited-reveal{border-color:#ead19a;animation:summon-arrive .45s ease-out var(--reveal-delay,0s) both,summon-limited-glow 1.5s ease-in-out calc(var(--reveal-delay,0s) + .45s) 3 forwards}
+@keyframes summon-gold-glow{0%,25%{box-shadow:inset 0 1px 0 #fff5b633,0 5px 0 #0b0a11,0 12px 20px #0004}55%,100%{box-shadow:inset 0 1px 0 #fff8c888,0 0 12px 3px #f0c65caa,0 0 32px 8px #a96727aa,0 12px 24px #0008}}
+@keyframes summon-limited-glow{0%,25%{box-shadow:inset 0 1px 0 #fff5b633,0 5px 0 #0b0a11,0 12px 20px #0004}55%,100%{box-shadow:inset 0 1px 0 #fff8c888,0 0 14px 4px #f5dfa0cc,0 0 36px 10px #be873cbb,0 12px 24px #0008}}
 @media(prefers-reduced-motion:reduce){.summon-card.summon-gold-reveal,.summon-card.summon-limited-reveal{animation:none;box-shadow:0 0 0 1px #efd17b,0 0 18px 4px #c99a4eaa}}
+/* Keep collection cards aligned in a calm grid instead of a staggered fan. */
+html body :is(.formation-workspace,.catalog-view,.enhancement-collection) .catalog{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(min(100%,132px),1fr))!important;grid-auto-rows:1fr;align-items:stretch!important;align-content:start;gap:14px!important;overflow:visible!important;min-height:0!important;padding:12px!important}
+html body :is(.formation-workspace,.catalog-view,.enhancement-collection) .catalog>.card{display:flex!important;flex-direction:column;align-items:stretch;width:100%!important;min-width:0!important;height:100%;min-height:400px;margin:0!important;overflow:hidden}
+html body :is(.formation-workspace,.catalog-view,.enhancement-collection) .catalog>.card .roster-avatar{width:100%!important;height:clamp(160px,18vw,220px)!important;flex:0 0 clamp(160px,18vw,220px)!important;margin:0 auto 8px}
+html body .campaign-intel .commander-line{box-sizing:border-box!important;width:100%;min-height:148px!important;padding:30px clamp(56px,10%,112px)!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;overflow:visible!important}
+html body .campaign-intel .commander-line>*{max-width:100%;overflow-wrap:anywhere;text-align:center}
+.journey-page .achievement:not(.earned){background-image:linear-gradient(135deg,#121b2aeb,#14151ce8),url('assets/war_slate.webp');background-position:center;background-size:cover;border-color:#657080}
+.journey-page .achievement.earned{background-image:linear-gradient(135deg,#61431bd9,#211a19eb),url('assets/war_iron.webp');background-position:center;background-size:cover;border-color:#d7b36c;box-shadow:inset 0 1px #fff0c94d,0 0 0 1px #d7b36c66,0 0 24px #c48b3e44,0 9px 15px #0007}
+.journey-page>header [data-journey="return"]{min-width:112px}
+@media(max-width:800px){html body :is(.formation-workspace,.catalog-view,.enhancement-collection) .catalog{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;padding:8px!important}html body :is(.formation-workspace,.catalog-view,.enhancement-collection) .catalog>.card{min-height:390px}}
