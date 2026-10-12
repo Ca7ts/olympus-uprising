@@ -1,0 +1,21 @@
+/* One float layer per card. Combat movement stays on the unit; the art rig stays inside it. */
+@keyframes legendary-frame-drift-soft{
+ 0%,100%{translate:0 0;rotate:-.15deg}
+ 50%{translate:0 -2px;rotate:.15deg}
+}
+@keyframes legendary-frame-glow-soft{
+ 0%,100%{box-shadow:0 0 5px 1px #d8a94b39,0 0 12px 2px #bd7b2530,inset 0 0 0 1px #f5da8540}
+ 50%{box-shadow:0 0 6px 1px #d8a94b43,0 0 14px 2px #bd7b2538,inset 0 0 0 1px #f5da8548}
+}
+html body :is(.card,.slot,.unit,.summon-card).r4{animation:legendary-frame-glow-soft 3s ease-in-out infinite;translate:none;rotate:none;will-change:auto}
+html body :is(.card,.slot,.unit,.summon-card).r4::after{content:none}
+html body .painted-avatar.legendary-card{animation:legendary-frame-drift-soft 3s ease-in-out infinite,legendary-frame-glow-soft 3s ease-in-out infinite;will-change:auto}
+html body .battle-board .unit.r4,html body dialog.summon-dialog .summon-card.r4{animation-name:legendary-frame-glow-soft;animation-duration:3s}
+.living-card-host{display:block;position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.living-card-host .konvajs-content{display:block;position:absolute!important;inset:0;pointer-events:none}
+.living-card-host canvas{display:block;pointer-events:none}
+html body .legendary-card>.art-panel::after{z-index:3;background-image:linear-gradient(var(--foil-angle,112deg),transparent 22%,#ffe9a00a 34%,#fff1b95c 42%,#fff8d8b0 45%,#ffe9a04f 48%,#d8b6ff27 54%,#78e5ff21 60%,transparent 72%),linear-gradient(135deg,#ffdf8215,#b78cff08 35%,#69e6df0a 68%,#ffe78a12);background-position:var(--foil-x,180%) 0,0 0;opacity:.12;animation:none;transition:opacity .2s}
+html body .legendary-card:hover>.art-panel::after{animation:none;opacity:.64}
+html.quiet-motion body :is(.card,.slot,.unit,.summon-card).r4,html.quiet-motion body .painted-avatar.legendary-card{animation:none;translate:none;rotate:none}
+html.quiet-motion body .legendary-card>.art-panel::after{animation:none;opacity:.12}
+@media(prefers-reduced-motion:reduce){html body :is(.card,.slot,.unit,.summon-card).r4,html body .painted-avatar.legendary-card{animation:none;translate:none;rotate:none}html body .legendary-card>.art-panel::after{opacity:.12;transition:none}}

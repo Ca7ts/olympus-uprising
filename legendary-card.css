@@ -1,0 +1,48 @@
+/* Pure CSS gold-card treatment: slow float, pointer-hover foil, forged-gold glow. */
+@keyframes legendary-float-tilt{
+ 0%,100%{translate:0 0;rotate:-.35deg}
+ 25%{translate:0 -3px;rotate:.2deg}
+ 50%{translate:0 -5px;rotate:.45deg}
+ 75%{translate:0 -2px;rotate:-.1deg}
+}
+@keyframes legendary-foil-sweep{
+ 0%{background-position:190% 0,0 0;opacity:.08}
+ 18%{opacity:.34}
+ 62%{opacity:.38}
+ 100%{background-position:-90% 0,0 0;opacity:.1}
+}
+@keyframes legendary-border-glow{
+  0%,100%{box-shadow:0 0 5px 1px #d8a94b39,0 0 13px 2px #bd7b2530,inset 0 0 0 1px #f5da8540}
+  50%{box-shadow:0 0 8px 2px #f0ca6b66,0 0 20px 4px #bb792a50,inset 0 0 0 1px #ffe7a077}
+}
+@keyframes legendary-foil-idle{0%,100%{background-position:180% 0,0 0}50%{background-position:-70% 0,0 0}}
+
+/* The deck cards, battlefield slots and combat units use rarity classes. */
+html body :is(.card,.slot,.unit,.summon-card).r4,
+html body .painted-avatar.rarity-4{
+ position:relative;
+ animation:legendary-float-tilt 3s ease-in-out infinite,legendary-border-glow 3.6s ease-in-out infinite;
+ will-change:translate,rotate,box-shadow;
+}
+html body :is(.card,.slot,.unit,.summon-card).r4::after,
+html body .painted-avatar.rarity-4>.art-panel::after{
+ content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+ background-image:linear-gradient(112deg,transparent 22%,#ffe9a00a 34%,#fff1b95c 42%,#fff 45%,#ffe9a04f 48%,#d8b6ff27 54%,#78e5ff21 60%,transparent 72%),linear-gradient(135deg,#ffdf8220,#b78cff0a 35%,#69e6df13 68%,#ffe78a19);
+ background-size:240% 100%,100% 100%;opacity:.14;mix-blend-mode:screen;
+ transition:opacity .25s ease,filter .25s ease;
+}
+html body :is(.card,.slot,.unit,.summon-card).r4:hover::after,
+html body .painted-avatar.rarity-4:hover>.art-panel::after{
+ opacity:.86;filter:saturate(1.35);animation:legendary-foil-sweep 1.2s ease-out both,legendary-foil-idle 5s 1.2s linear infinite;
+}
+html body :is(.card,.slot,.unit,.summon-card).r4:focus-visible::after{opacity:.74}
+html body .painted-avatar.rarity-4>.art-panel{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none}
+html body .card.r4:hover,html body .slot.r4:hover{z-index:4}
+html body .unit.r4,html body .painted-avatar.rarity-4{transform-origin:center}
+html body .battle-board .unit.r4{animation-duration:3s,3.6s}
+html body dialog.summon-dialog .summon-card.r4{animation-name:legendary-border-glow;animation-duration:3.6s;animation-iteration-count:infinite}
+@media(hover:none){html body :is(.card,.slot,.unit,.summon-card).r4::after,html body .painted-avatar.rarity-4>.art-panel::after{opacity:.24}}
+@media(prefers-reduced-motion:reduce){
+ html body :is(.card,.slot,.unit,.summon-card).r4,html body .painted-avatar.rarity-4{animation:none;will-change:auto;box-shadow:0 0 7px 2px #d8a94b45,inset 0 0 0 1px #f5da8540}
+ html body :is(.card,.slot,.unit,.summon-card).r4::after,html body .painted-avatar.rarity-4>.art-panel::after{animation:none;transition:none}
+}

@@ -58,3 +58,9 @@
 - 恢復較寬卡牌與原比例立繪，保留整齊對齊；主角逆命族改稱逆命者。
 - 手機版隱藏神域橫幅與下一個目標；已完成成就顯示原有石紋貼皮。
 - 普通與限定池維持抽取和保底規則，補上解鎖卡色造成百分比變動的說明；可抽數量明示為包含已擁有角色的種類數。
+
+
+## 2026-10-13 — Approved gold-card motion
+- Published the approved 42 gold identities with three independently moving cutout parts, breathing, pointer foil and soft gold glow.
+- Frame motion: 2px, ±0.15 degrees, 3-second cycle. Expressive internal movement matches the final local preview.
+- Original art fallback, visibility-based activation, reduced-motion support and renderer-owned battle DOM preservation.
