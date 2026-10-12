@@ -1502,7 +1502,8 @@ function openBattleCardInfo(uid){
 (function(){
  const base=battleView;battleView=function(){let html=base();if(!mobilePortraitLayout())return html;
  html=html.replace(/<button data-action="step"[^>]*>[^<]*<\/button>/,'<button data-action="manualBattle" aria-pressed="'+!!globalThis.mobileManualBattle+'" '+(battle.done?'disabled':'')+'>手動戰鬥</button>');
- return html.replace('<aside class="battle-sidebar">',mobileCardDock()+'<aside class="battle-sidebar">');
+ html=html.replace('</div></section><section class="panel inspector-panel">','</div>'+mobileCardDock()+'</section><section class="panel inspector-panel">');
+ return html;
  };
  const paint=paintBattleApp;paintBattleApp=function(markup){paint(markup);const slides=[...document.querySelectorAll('.camp-story-slides i')];slides.forEach((el,i)=>el.classList.toggle('camp-current',i===(globalThis.campSlideIndex||0)));};
 })();
