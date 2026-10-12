@@ -34,6 +34,7 @@
 - [戰役餘燼與殘魂 20 倍測試倍率](https://github.com/Ca7ts/olympus-uprising/commit/d7e20b69bf1454dfc3e0ecd077fe9b04fe963666)
 - [勝利結算新增再次戰鬥](https://github.com/Ca7ts/olympus-uprising/commit/8e62ea6a3589dbaeb8444db0d41ea089a85ca91c)
 - [金卡奧義新增屬性投射物與命中特效](https://github.com/Ca7ts/olympus-uprising/commit/757215f6585243808c8fde117b9e7de3ab5f3a5f)
+- [手機橫式重整為敵我並列九宮格與單排控制鈕](https://github.com/Ca7ts/olympus-uprising/commit/0cd6dd99cf1e721dd88c48afa682c597e8ac78d2)
 
 ---
 
