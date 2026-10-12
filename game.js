@@ -1560,8 +1560,22 @@ function openBattleSection(uid,key){const u=battle?.units.find(x=>x.uid===uid),s
  const home=document.querySelector('.title-screen');if(!home)return;home.append(panel);const actions=home.querySelector('.title-actions');if(actions)actions.inert=true;
  const status=panel.querySelector('[data-load-status]'),detail=panel.querySelector('[data-load-detail]'),bar=panel.querySelector('progress'),skip=panel.querySelector('[data-load-skip]'),retry=panel.querySelector('[data-load-retry]');
  let released=false;function unlock(){released=true;if(actions)actions.inert=false;skip.hidden=true;}
+ let completionScheduled=false;
+ function finishPreparation(delay=700){
+  unlock();if(completionScheduled)return;completionScheduled=true;
+  setTimeout(()=>{
+   if(!panel.isConnected)return;
+   if(panel.contains(document.activeElement)){const next=actions?.querySelector('button:not(:disabled),a[href]');next?.focus({preventScroll:true});}
+   panel.inert=true;
+   const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+   if(reduced||!panel.animate){panel.remove();return;}
+   const fade=panel.animate([{opacity:1},{opacity:0}],{duration:650,easing:'ease-out',fill:'forwards'});
+   fade.finished.then(()=>panel.remove(),()=>panel.remove());
+  },delay);
+ }
+
  skip.onclick=()=>{unlock();status.textContent='已開放操作；素材會繼續在背景準備。';};
- if(location.protocol==='file:'){bar.value=100;status.textContent='離線版素材已隨遊戲檔案載入';detail.textContent='可開始旅程；不需要額外下載。';panel.querySelector('[data-load-eta]').textContent='預計剩餘：00:00';unlock();return;}
+ if(location.protocol==='file:'){bar.value=100;status.textContent='離線版素材已隨遊戲檔案載入';detail.textContent='可開始旅程；不需要額外下載。';panel.querySelector('[data-load-eta]').textContent='預計剩餘：00:00';finishPreparation();return;}
  let manifest,done=new Set(),received=new Map(),running=false,mediaCache=null,cachedCount=0,cacheWriteFailed=false;
  const eta=panel.querySelector('[data-load-eta]');let samples=[],etaTimer=null;
  function updateEta(){if(!manifest)return;const now=performance.now(),total=manifest.assets.reduce((n,x)=>n+x.size,0),bytes=manifest.assets.reduce((n,x)=>n+(done.has(x.path)?x.size:Math.min(x.size,received.get(x.path)||0)),0);samples.push({time:now,bytes});while(samples.length>2&&samples[1].time<now-15000)samples.shift();const first=samples[0],elapsed=(now-first.time)/1000,rate=elapsed>0?(bytes-first.bytes)/elapsed:0;if(bytes>=total){eta.textContent='預計剩餘：00:00';return;}if(elapsed<2){eta.textContent='預計剩餘：估算中…';return;}if(rate<=0){eta.textContent='預計剩餘：等待網路…';return;}const seconds=Math.ceil((total-bytes)/rate),h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),sec=seconds%60;eta.textContent='預計剩餘：約 '+(h?h+':':'')+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
@@ -1569,7 +1583,7 @@ function openBattleSection(uid,key){const u=battle?.units.find(x=>x.uid===uid),s
  function draw(current){const total=manifest.assets.reduce((n,x)=>n+x.size,0),bytes=manifest.assets.reduce((n,x)=>n+(done.has(x.path)?x.size:Math.min(x.size,received.get(x.path)||0)),0);bar.value=total?bytes/total*100:100;detail.textContent='已快取 '+cachedCount+' 個 · 本次需下載 '+(manifest.assets.length-cachedCount)+' 個 ｜ '+Math.floor(bar.value)+'% · '+(bytes/1048576).toFixed(1)+' / '+(total/1048576).toFixed(1)+' MB · '+done.size+' / '+manifest.assets.length+' 個素材';if(!released)status.textContent=current;}
  async function run(){if(running)return;running=true;retry.hidden=true;samples=[];updateEta();etaTimer=setInterval(updateEta,1000);const queue=manifest.assets.filter(x=>!done.has(x.path));let failures=0;
  async function worker(){while(queue.length){const item=queue.shift();received.set(item.path,0);draw('下載更新素材：'+item.label);const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),45000);try{const response=await fetch(item.path+'?rev='+item.hash,{signal:abort.signal});if(!response.ok)throw Error('HTTP '+response.status);const cacheCopy=mediaCache?response.clone():null;const reader=response.body?.getReader();if(reader){while(true){const chunk=await reader.read();if(chunk.done)break;received.set(item.path,(received.get(item.path)||0)+chunk.value.byteLength);draw('下載／讀取快取：'+item.label);}}else await response.arrayBuffer();if(cacheCopy){try{await mediaCache.put(new URL(item.path+'?rev='+item.hash,location.href).href,cacheCopy);}catch{cacheWriteFailed=true;}}done.add(item.path);}catch{failures++;received.delete(item.path);}finally{clearTimeout(timer);draw('整理素材…');}}}
- await Promise.all([worker(),worker(),worker()]);running=false;clearInterval(etaTimer);updateEta();if(failures)eta.textContent='預計剩餘：等待重試';if(!failures){bar.value=100;status.textContent=cacheWriteFailed?'素材已就緒；瀏覽器未能保存全部快取，下次可能需補下載。':cachedCount===manifest.assets.length?'素材已快取，無需重新下載，可以開始旅程':'素材更新完成，已保存快取，可以開始旅程';unlock();}else{status.textContent='部分素材尚未完成，可重試或先進入遊戲。';retry.hidden=false;} }
+ await Promise.all([worker(),worker(),worker()]);running=false;clearInterval(etaTimer);updateEta();if(failures)eta.textContent='預計剩餘：等待重試';if(!failures){bar.value=100;status.textContent=cacheWriteFailed?'素材已就緒；瀏覽器未能保存全部快取，下次可能需補下載。':cachedCount===manifest.assets.length?'素材已快取，無需重新下載，可以開始旅程':'素材更新完成，已保存快取，可以開始旅程';finishPreparation(cacheWriteFailed?3000:700);}else{status.textContent='部分素材尚未完成，可重試或先進入遊戲。';retry.hidden=false;} }
  retry.onclick=()=>{if(manifest)void run();else location.reload();};
  (async()=>{try{const response=await fetch('asset-manifest.json',{cache:'no-store'});if(!response.ok)throw Error('manifest');manifest=await response.json();
  if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('asset-worker.js');await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(Error('worker timeout')),8000))]);if(!navigator.serviceWorker.controller)await Promise.race([new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true})),new Promise(resolve=>setTimeout(resolve,2000))]);}catch{detail.textContent='快取暫不可用，改用一般下載。';}}
